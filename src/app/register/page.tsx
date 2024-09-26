@@ -41,7 +41,6 @@ export default function Page() {
         }
     };
 
-
     return (
         <div className={`flex flex-col min-h-screen bg-mago-sabao bg-cover ${poppins.className}`}>
             <main className="p-8 rounded-lg w-full max-w-md mt-40 ml-36 mb-auto">

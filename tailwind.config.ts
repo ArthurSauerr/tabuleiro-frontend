@@ -11,10 +11,12 @@ const config: Config = {
   	extend: {
 		backgroundImage: {
 			'mago-sabao': "url('/assets/bg-register.png')",
+			'home': "url('/assets/bg-home.jpg')",
 		  },
   		colors: {
 			tabuleiro: '#3A387A',
 			tabuleiro2: '#6A67E0',
+			darkPurple: '#181737',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
