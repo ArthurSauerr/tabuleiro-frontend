@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import Navbar from '@/components/ui/navbar';
 import Image from 'next/image';
+import { PiSwordFill } from "react-icons/pi";
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -14,16 +15,13 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div>
+    <div className="overflow-hidden">
       <Navbar />
       <div className={`relative grid grid-cols-2 min-h-screen ${poppins.className}`}>
-        {/* Background com opacidade */}
         <div className="absolute inset-0 bg-home bg-cover opacity-40 z-0"></div>
 
-        {/* Div com diagonal e conteúdo */}
-        <div className="bg-darkPurple flex items-start justify-center clip-right-diagonal relative z-10 pt-24">
+        <div className="bg-darkPurple flex items-start justify-center clip-right-diagonal relative z-10 pt-36">
           <div className='flex flex-col'>
-            {/* Alinhar a imagem ao lado do texto */}
             <h1 className="text-7xl font-bold mb-28 flex items-center">
               tabuleir
               <span className='ml-2'>
@@ -42,7 +40,10 @@ export default function Home() {
             <p className='text-lg max-w-xl leading-relaxed opacity-50 font-[300]'>
               Crie fichas personalizáveis para qualquer sistema de RPG, abandone papéis e pergaminhos! Sua jornada começa agora, pronto para jogar?
             </p>
-            <Button type="submit" variant={"tabuleiro"} className="mt-6 p-6 rounded-xl w-1/3">Começar</Button>
+            <Button onClick={() => router.push('/characters')} variant={"tabuleiro"} className="mt-6 p-6 rounded-3xl w-1/4 font-bold">
+              <span className='ml-2'>Começar </span>
+              <span className='bg-white rounded-full p-2 ml-10'><PiSwordFill className='text-tabuleiro2 text-2xl'/></span>
+            </Button>
           </div>
         </div>
       </div>
