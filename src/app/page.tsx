@@ -2,7 +2,7 @@
 import { Poppins } from 'next/font/google';
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import Navbar from '@/components/ui/navbar';
+import Navbar from '@/components/navbar';
 import Image from 'next/image';
 import { PiSwordFill } from "react-icons/pi";
 
@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
-      <Navbar />
+      <Navbar/>
       <div className={`relative grid grid-cols-2 min-h-screen ${poppins.className}`}>
         <div className="absolute inset-0 bg-home bg-cover opacity-40 z-0"></div>
 

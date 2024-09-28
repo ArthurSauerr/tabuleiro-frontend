@@ -8,6 +8,7 @@ import axios from 'axios';
 import { HiOutlineMail } from "react-icons/hi";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -15,6 +16,7 @@ const poppins = Poppins({
 });
 
 export default function Page() {
+    const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -31,8 +33,13 @@ export default function Page() {
         console.log('User Data: ', userData);
 
         try {
-            const response = await axios.post('https://tabuleiro-backend.onrender.com/users/signin', userData);
+            const response = await axios.post(
+                'https://tabuleiro-backend.onrender.com/users/signin',
+                userData,
+                { withCredentials: true }
+            );            
             console.log('Response:', response.data);
+            router.push('/');
         } catch (error) {
             console.error('ERRO: ', error);
         }

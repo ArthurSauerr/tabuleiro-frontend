@@ -1,6 +1,6 @@
 'use client'
 import { Poppins } from 'next/font/google';
-import Navbar from '@/components/ui/navbar';
+import Navbar from '@/components/navbar';
 
 const poppins = Poppins({
     subsets: ['latin'],
