@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Poppins } from 'next/font/google';
 import Link from 'next/link';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import { Button } from './ui/button';
 
 const poppins = Poppins({
@@ -26,6 +27,7 @@ const poppins = Poppins({
 });
 
 const Navbar = () => {
+  const router = useRouter();
   const [authenticated, setAuthenticated] = useState(false);
 
   const checkAuth = async () => {
@@ -48,7 +50,6 @@ const Navbar = () => {
     try {
       await axios.post(
         'https://tabuleiro-backend.onrender.com/users/logout',
-        {},
         { withCredentials: true }
       );
       setAuthenticated(false);
@@ -86,22 +87,21 @@ const Navbar = () => {
         {authenticated ? (
           <DropdownMenu >
             <DropdownMenuTrigger asChild>
-              <Button variant="tabuleiro">Perfil</Button>
+              <p className="text-tabuleiro2 text-sm font-bold hover:underline cursor-pointer">Perfil</p>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-52 bg-zinc-900 ">
-              <DropdownMenuLabel className="font-bold text-tabuleiro2">Minha conta</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className='focus:bg-tabuleiro'>
-                <Button className="text-sm font-bold text-tabuleiro2">Perfil</Button>
+            <DropdownMenuContent className="w-52 bg-zinc-900 border-none">
+              <DropdownMenuLabel className="font-bold text-[15px] text-tabuleiro2 cursor-default">Minha conta</DropdownMenuLabel>
+              <DropdownMenuItem className='focus:bg-tabuleiro/15'>
+                <p className="text-sm font-md text-tabuleiro2 cursor-pointer">Perfil</p>
               </DropdownMenuItem>
-              <DropdownMenuItem className='focus:bg-tabuleiro'>
-                <Button className="text-sm font-bold text-tabuleiro2">Fichas</Button>
+              <DropdownMenuItem className='focus:bg-tabuleiro/15'>
+                <p onClick={() => router.push('/characters')} className="text-sm font-md text-tabuleiro2 cursor-pointer">Fichas</p>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className='focus:bg-tabuleiro'>
-              <Button onClick={handleLogout} className="text-sm font-bold text-tabuleiro2">
+              <DropdownMenuSeparator className='bg-tabuleiro' />
+              <DropdownMenuItem className='focus:bg-tabuleiro/15'>
+              <p onClick={handleLogout} className="text-sm font-md text-tabuleiro2 cursor-pointer">
                 Logout
-              </Button>
+              </p>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

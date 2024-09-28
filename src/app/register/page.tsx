@@ -112,7 +112,7 @@ export default function Page() {
                 <p>Desenvolvido por Arthur Sauer Germano</p>
                 <p>
                     <Link href="https://www.artstation.com/sabaum" className="hover:underline" target="_blank" rel="noopener noreferrer">
-                        Artes feitas por João Victor Sobreira
+                        Artes feitas por João Vitor Sobreira
                     </Link>
                 </p>
             </footer>

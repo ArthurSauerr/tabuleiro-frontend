@@ -7,7 +7,7 @@ const poppins = Poppins({
     weight: ['300', '400', '700'],
   });
 
-export default function characters() {
+export default function dice() {
 
     return(
         <div>
