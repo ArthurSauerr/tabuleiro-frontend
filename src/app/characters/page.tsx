@@ -5,41 +5,60 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { AxiosResponse, AxiosError } from 'axios'
 import { Button } from "@/components/ui/button";
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 
 const poppins = Poppins({
     subsets: ['latin'],
     weight: ['300', '400', '700'],
 });
 
-export default function characters() {
+export default function Characters() {
     const router = useRouter();
     const [characters, setCharacters] = useState([]);
     const [hasCharacters, setHasCharacters] = useState(false);
+    const [loading, setLoading] = useState(true); // Estado de carregamento
 
     const checkCharacters = async () => {
+        setLoading(true); // Ativa o estado de carregamento
         await axios.get('https://tabuleiro-backend.onrender.com/characters/list-of-characters',
             { withCredentials: true }
         )
             .then((response: AxiosResponse) => {
-                console.log('SUCESSO');
                 const charactersList = response.data.characters;
                 setCharacters(charactersList);
                 setHasCharacters(charactersList.length > 0);
             })
             .catch((reason: AxiosError) => {
                 if (reason.response!.status === 404) {
-                    console.log('Nenhum personagem encontrado');
                     setHasCharacters(false);
                 } else {
                     console.error('ERRO AO LISTAR PERSONAGENS: ', reason.cause);
                 }
             })
-    }
+            .finally(() => {
+                setLoading(false); // Desativa o estado de carregamento após a requisição
+            });
+    };
+
+    const handleAccessClick = (characterId: string) => {
+        router.push(`/characters/${characterId}`);
+    };
 
     useEffect(() => {
         checkCharacters();
     }, []);
+
+    if (loading) {
+        return (
+            <div className={`${poppins.className}`}>
+                <Navbar />
+                <div className="flex justify-center items-center h-screen">
+                    <div className="w-16 h-16 border-4 border-tabuleiro2 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={`${poppins.className}`}>
             <Navbar />
@@ -53,14 +72,15 @@ export default function characters() {
                                     <div
                                         key={index}
                                         className="relative group border border-2 border-tabuleiro2 p-4 rounded-lg shadow-md bg-tabuleiro2/15 w-44 h-40 transition-transform duration-300 ease-in-out hover:scale-105"
-                                        >
+                                    >
                                         <li className="text-white font-medium text-center group-hover:opacity-0 transition-opacity duration-150 ease-in-out">
                                             <p className='font-bold'>{character.name}</p>
                                             <p className='mb-6 font-light'>{character.class}</p>
                                             <p className='font-light'>Vida: {Math.round(character.current_health)} / {Math.round(character.max_health)}</p>
+                                            <p className='font-light'>ID: {character.id}</p>
                                         </li>
                                         <div className="absolute inset-0 flex justify-center items-center hidden group-hover:flex transition-opacity duration-150 ease-in-out">
-                                            <Button className="bg-tabuleiro text-white font-md py-2 px-4 rounded hover:bg-tabuleiro2">Acessar</Button>
+                                            <Button onClick={() => handleAccessClick(character.id)} className="bg-tabuleiro text-white font-md py-2 px-4 rounded hover:bg-tabuleiro2">Acessar</Button>
                                         </div>
                                     </div>
                                 ))}
@@ -68,7 +88,6 @@ export default function characters() {
                                     <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
                                 </div>
                             </ul>
-
                         </div>
                     ) : (
                         <div className="text-center">

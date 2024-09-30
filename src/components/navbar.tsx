@@ -49,9 +49,9 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        'https://tabuleiro-backend.onrender.com/users/logout',
-        { withCredentials: true }
+        'https://tabuleiro-backend.onrender.com/users/logout'
       );
+      router.push('/login')
       setAuthenticated(false);
     } catch (error) {
       console.error('Erro no logout:', error);
