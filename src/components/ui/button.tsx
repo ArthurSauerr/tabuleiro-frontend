@@ -11,6 +11,8 @@ const buttonVariants = cva(
       variant: {
         tabuleiro:
         "bg-tabuleiro text-primary-foreground shadow hover:bg-tabuleiro2",
+        attackCard:
+        "bg-tabuleiro2 text-primary-foreground font-bold shadow-shadowInner hover:bg-tabuleiro2/80 outline outline-2 outline-tabuleiro2",
         default:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive:

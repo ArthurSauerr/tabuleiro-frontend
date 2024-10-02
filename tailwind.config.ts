@@ -9,6 +9,24 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+		scrollbar: {
+			DEFAULT: {
+			  'thumb': 'bg-tabuleiro', // Cor do "thumb"
+			  'track': 'bg-tabuleiro2', // Cor da trilha
+			},
+			// Você pode definir cores específicas
+			'thin': {
+			  'thumb': 'bg-tabuleiro',
+			  'track': 'bg-tabuleiro2',
+			},
+			'rounded': {
+			  'thumb': 'bg-tabuleiro2 rounded-full',
+			  'track': 'bg-tabuleiro',
+			},
+		  },
+		boxShadow: {
+			shadowInner: 'inset 0 0 10px rgba(0, 0, 0, 0.5)',
+		  },
 		backgroundImage: {
 			'mago-sabao': "url('/assets/bg-register.png')",
 			'home': "url('/assets/bg-home.jpg')",
@@ -17,6 +35,10 @@ const config: Config = {
 			tabuleiro: '#3A387A',
 			tabuleiro2: '#6A67E0',
 			darkPurple: '#181737',
+			healthBar: '#DB4848',
+			staminaBar: '#6A9648',
+			manaBar: '#486C96',
+			sanityBar: '#614896',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -65,6 +87,8 @@ const config: Config = {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+	require("tailwindcss-animate"),
+  ],
 };
 export default config;
