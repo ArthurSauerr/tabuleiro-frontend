@@ -149,7 +149,7 @@ export default function CharacterDetails() {
                 </div>
 
 
-                <div className="flex flex-col p-4 gap-8 pt-28 pl-20">
+                <div className="flex flex-col p-4 gap-8 pt-28 pl-32">
                     <div className="flex flex-col ml-10">
                         <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Ataques</h1>
                         <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
@@ -194,45 +194,37 @@ export default function CharacterDetails() {
                         </div>
                     </div>
 
-
                     <div className="flex flex-col ml-10">
                         <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Habilidades</h1>
                         <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
-                            <div className='bg-tabuleiro/15 p-4 rounded-xl'>
-                                <ul className="grid grid-cols-3 gap-3">
-                                    {data?.abilities && data.abilities.length > 0 ? (
-                                        data.abilities.map((abilities, index) => (
-                                            <li
-                                                key={index}
-                                                className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44"
-                                            >
-                                                <div className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer">
-                                                    <IoSearchSharp className="h-4 w-4 text-white" />
-                                                </div>
-                                                <div className='absolute top-0 bg-tabuleiro2 w-full h-1/5 rounded-t-lg text-center z-10'>
-                                                    <p className="font-bold text-md pt-3">{abilities.name}</p>
-                                                </div>
-                                                <div className='flex flex-col gap-5'>
-                                                    <div className='flex justify-between pt-14'>
-                                                        <p className="text-md font-bold mr-9 p-1">Dano</p>
-                                                        <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">{abilities.diceqtd}d{abilities.dicenumber}</p>
+                            <div className='bg-tabuleiro/15 p-4 pb-0 rounded-xl'>
+                                <ScrollArea className="w-[1000px] overflow-x-auto pb-5">
+                                    <ul className="flex gap-6">
+                                        {data?.abilities && data.abilities.length > 0 ? (
+                                            data.abilities.map((abilities, index) => (
+                                                <li
+                                                    key={index}
+                                                    className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44"
+                                                >
+                                                    <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
+                                                        <p className="font-bold text-md pt-1">{abilities.name}</p>
                                                     </div>
-                                                    <div className='flex justify-between'>
-                                                        <p className="text-md font-bold p-1 mb-8">{abilities.cost_type}</p>
-                                                        <p className="text-md font-bold text-right p-1">{abilities.cost}</p>
-                                                    </div>
-                                                </div>
-                                                <Button variant={'attackCard'} className='w-2/3'>Usar</Button>
-
-                                            </li>
-                                        ))
-                                    ) : (
-                                        <li>Nenhuma habilidade disponível</li>
-                                    )}
-                                    <div className="flex border-dashed border-2 border-tabuleiro2 w-full h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
-                                        <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
-                                    </div>
-                                </ul>
+                                                    <ScrollArea 
+                                                        className='overflow-y-auto text-xs p-2 pt-6  break-words max-h-[220px] z-10'
+                                                    >
+                                                        <p>{abilities.description}</p>
+                                                    </ScrollArea>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li>Nenhum ataque disponível</li>
+                                        )}
+                                        <div className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
+                                            <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
+                                        </div>
+                                    </ul>
+                                    <ScrollBar orientation="horizontal" />
+                                </ScrollArea>
                             </div>
                         </div>
                     </div>
