@@ -18,6 +18,7 @@ export default function CharacterDetails() {
     const { id } = useParams();
     const [data, setCharacterData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const totalWeight = data?.inventory?.reduce((acc, item) => acc + Number(item.weight), 0);
 
     useEffect(() => {
         if (id) {
@@ -209,7 +210,7 @@ export default function CharacterDetails() {
                                                     <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
                                                         <p className="font-bold text-md pt-1">{abilities.name}</p>
                                                     </div>
-                                                    <ScrollArea 
+                                                    <ScrollArea
                                                         className='overflow-y-auto text-xs p-2 pt-6  break-words max-h-[220px] z-10'
                                                     >
                                                         <p>{abilities.description}</p>
@@ -232,6 +233,47 @@ export default function CharacterDetails() {
 
 
 
+            </div>
+            <div className="flex flex-col ml-48 mr-48">
+                <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Inventário</h1>
+                <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
+                    <p className=" text-center text-md font-bold text-tabuleiro2">Peso dos itens: {totalWeight}</p>
+                    <div className='bg-tabuleiro/15 p-4 pb-4 rounded-xl'>
+                        <ul className="grid grid-cols-7 gap-6">
+                            {data?.inventory && data.inventory.length > 0 ? (
+                                data.inventory.map((inventory, index) => (
+                                    <li
+                                        key={index}
+                                        className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44"
+                                    >
+                                        <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
+                                            <p className="font-bold text-md pt-1">{inventory.item}</p>
+                                        </div>
+                                        <div className='flex flex-col gap-5'>
+                                            <div className='flex justify-between pt-14'>
+                                                <p className="text-md font-bold mr-9 p-1">Dano</p>
+                                                <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">{inventory.diceqtd}d{inventory.dicenumber}</p>
+                                            </div>
+                                            <div className='flex justify-between'>
+                                                <p className="text-md font-bold mr-9 p-1">Quantia</p>
+                                                <p className="text-md font-bold text-right p-1">{inventory.quantity}</p>
+                                            </div>
+                                            <div className='flex justify-between'>
+                                                <p className="text-md font-bold p-1 mb-8">Peso</p>
+                                                <p className="text-md font-bold text-right p-1">{Math.round(inventory.weight)}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))
+                            ) : (
+                                <li>Nenhum item disponível</li>
+                            )}
+                            <div className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
+                                <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     );
