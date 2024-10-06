@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import Navbar from '@/components/navbar';
 import { useParams } from 'next/navigation';
 import { Poppins } from 'next/font/google';
@@ -8,6 +8,17 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { IoSearchSharp } from "react-icons/io5";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -36,6 +47,38 @@ export default function CharacterDetails() {
                 });
         }
     }, [id]);
+
+    const [diceResults, setDiceResults] = useState<number[]>([]);
+    const [diceSumResults, setDiceSumResults] = useState<number[]>([]);
+    const [diceMaxValue, setDiceMaxValue] = useState(0);
+    const [diceMinValue, setDiceMinValue] = useState(0);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const rollDice = async (diceNumber: number, atr_value: number) => {
+        const diceData = {
+            diceNumber: diceNumber,
+            diceQtd: atr_value,
+        };
+
+        try {
+            const response: AxiosResponse = await axios.post('https://tabuleiro-backend.onrender.com/dice/roll', diceData, {
+                withCredentials: true,
+            });
+
+            const results = response.data.result;
+            if (results && Array.isArray(results)) {
+                setDiceResults(results)
+                setDiceSumResults(results.reduce((acc, curr) => acc + curr, 0));
+                setDiceMaxValue(Math.max(...results));
+                setDiceMinValue(Math.min(...results));
+                setIsDialogOpen(true);
+            } else {
+                console.error('Formato de resposta inesperado: ', response.data);
+            }
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao rolar os dados: ', error);
+        }
+    };
 
     if (loading) {
         return (
@@ -124,6 +167,36 @@ export default function CharacterDetails() {
                         </div>
                     </div>
                 </div>
+                <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} >
+                    <AlertDialogContent className={`${poppins.className}`} >
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className='text-tabuleiro2 text-center'>Resultado da Rolagem</AlertDialogTitle>
+                            <AlertDialogDescription className='text-white font-md text-center'>
+                                {diceResults.length > 0 ? (
+                                    <div className='space-y-2'>
+                                        <div className='grid grid-cols-2 gap-2 gap-x-4 font-bold'>
+                                            <p className='text-right'>Dados: </p>
+                                            <span className='font-bold text-tabuleiro2 text-left'>{diceResults.join(', ')}</span>
+                                            <p className='text-right'>Soma: </p>
+                                            <span className='font-bold text-tabuleiro2 text-left'>{diceSumResults}</span>
+                                            <p className='text-right'>Maior valor: </p>
+                                            <span className='font-bold text-tabuleiro2 text-left'>{diceMaxValue}</span>
+                                            <p className='text-right'>Menor valor: </p>
+                                            <span className='font-bold text-tabuleiro2 text-left'>{diceMinValue}</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <span>Nenhum resultado disponível.</span>
+                                )}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro' onClick={() => setIsDialogOpen(false)}>
+                                Fechar
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
                 <div className='bg-tabuleiro2/35 p-4 pr-0 border-solid border-tabuleiro border-2 rounded-r-3xl '>
                     <ScrollArea className='h-[480px] rounded-md pr-4'>
                         <ul className="grid grid-cols-1 gap-3">
@@ -131,9 +204,13 @@ export default function CharacterDetails() {
                                 data.attributes.map((attribute, index) => (
                                     <li
                                         key={index}
-                                        className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-20 w-24"
+                                        className="relative flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-20 w-24 hover:bg-tabuleiro2/15"
+                                        onClick={() => rollDice(attribute.dicenumber, attribute.value)}
                                     >
-                                        <span className="text-2xl font-bold pb-1">{attribute.value}</span>
+                                        <span className="text-2xl font-bold pb-1">
+                                            {attribute.value}
+                                        </span>
+
                                         <div className='absolute bottom-1 bg-tabuleiro2 w-full -mb-2 rounded-b-lg text-center'>
                                             <span className="font-bold text-sm ">{attribute.name}</span>
                                         </div>
@@ -152,7 +229,7 @@ export default function CharacterDetails() {
 
                 <div className="flex flex-col p-4 gap-8 pt-28 pl-32">
                     <div className="flex flex-col ml-10">
-                        <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Ataques</h1>
+                        <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Ataques & Magias</h1>
                         <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
                             <div className='bg-tabuleiro/15 p-4 pb-0 rounded-xl'>
                                 <ScrollArea className=" w-[1000px] overflow-x-auto pb-5">
@@ -179,7 +256,7 @@ export default function CharacterDetails() {
                                                             <p className="text-md font-bold text-right p-1">{spells.cost}</p>
                                                         </div>
                                                     </div>
-                                                    <Button variant={'attackCard'} className='w-2/3'>Usar</Button>
+                                                    <Button onClick={() => rollDice(spells.dicenumber, spells.diceqtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
                                                 </li>
                                             ))
                                         ) : (
