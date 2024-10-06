@@ -93,4 +93,15 @@ body {
   .clip-right-diagonal {
     clip-path: polygon(0 0, 75% 0, 100% 100%, 0% 100%);
   }
+
+  /* Remover setinhas do input type number */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none; /* Chrome e Safari */
+    margin: 0; /* Para remover o espaço em volta */
+}
+
+input[type='number'] {
+    -moz-appearance: textfield; /* Firefox */
+}
 }
