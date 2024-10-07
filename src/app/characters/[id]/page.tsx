@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import Image from 'next/image';
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -42,6 +43,7 @@ export default function CharacterDetails() {
     const [isDialogCreateSpellOpen, setIsDialogCreateSpellOpen] = useState(false);
     const [isDialogCreateAbilityOpen, setIsDialogCreateAbilityOpen] = useState(false);
     const [isDialogCreateAttributeOpen, setIsDialogCreateAttributeOpen] = useState(false);
+    const [isDialogCreateItemOpen, setIsDialogCreateItemOpen] = useState(false);
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -49,8 +51,17 @@ export default function CharacterDetails() {
     const [costType, setCostType] = useState("");
     const [diceNumber, setDiceNumber] = useState(null);
     const [diceQtd, setDiceQtd] = useState(null);
+    const [quantity, setQuantity] = useState(null);
+    const [weight, setWeight] = useState(null);
+
 
     const [value, setValue] = useState(null);
+
+    const [expandedIndex, setExpandedIndex] = useState<number | null>(null); // Estado para rastrear qual magia está expandida
+
+    const handleSearchClick = (index: number) => {
+        setExpandedIndex(expandedIndex === index ? null : index);
+    };
 
 
     useEffect(() => {
@@ -143,7 +154,7 @@ export default function CharacterDetails() {
             setCharacterData(response.data);
             setIsDialogCreateAbilityOpen(false);
         } catch (error: AxiosError | any) {
-            console.error('Erro ao cadastrar ataque: ', error);
+            console.error('Erro ao cadastrar habilidade: ', error);
         }
     };
 
@@ -166,17 +177,34 @@ export default function CharacterDetails() {
             setCharacterData(response.data);
             setIsDialogCreateAttributeOpen(false);
         } catch (error: AxiosError | any) {
-            console.error('Erro ao cadastrar ataque: ', error);
+            console.error('Erro ao cadastrar atributo: ', error);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="w-16 h-16 border-4 border-tabuleiro2 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
-    }
+    const createItem = async () => {
+        const itemData = {
+            item: name,
+            quantity: quantity,
+            weight: weight,
+            diceNumber: diceNumber,
+            diceQtd: diceQtd,
+            char_id: id,
+        };
+
+        try {
+            await axios.post('https://tabuleiro-backend.onrender.com/attributes/create', itemData, {
+                withCredentials: true,
+            });
+
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setCharacterData(response.data);
+            setIsDialogCreateItemOpen(false);
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao cadastrar item: ', error);
+        }
+    };
 
     const getCostBackgroundClass = (costType) => {
         switch (costType) {
@@ -189,9 +217,17 @@ export default function CharacterDetails() {
             case 'Sanidade':
                 return 'bg-sanityBar outline outline-2 outline-[#8775AE]';
             default:
-                return 'bg-gray-500 outline outline-2 outline-gray-400';
+                return 'bg-zinc-500 outline outline-2 outline-gray-400';
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="w-16 h-16 border-4 border-tabuleiro2 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     return (
         <div className={`${poppins.className}`}>
@@ -304,12 +340,43 @@ export default function CharacterDetails() {
                         <AlertDialogDescription className='text-white font-md text-center'>
                             <div className='space-y-2'>
                                 <div className='flex flex-col gap-4 mt-4 items-center'>
-                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={14} value={name} onChange={(e) => setName(e.target.value)} />
+                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={12} value={name} onChange={(e) => setName(e.target.value)} />
                                     <Input type="number" placeholder="Valor" className='w-1/2 text-center border-tabuleiro border-2' value={value} onChange={(e) => setValue(Number(e.target.value))} />
                                     <div className='flex justify-center items-center'>
                                         <p className='text-xl font-bold text-tabuleiro2'>{value}</p>
                                         <p className='text-xl mr-4 ml-3 text-tabuleiro2 font-bold'>d</p>
                                         <Input type="number" placeholder="Dado" className=' text-center border-tabuleiro border-2' value={diceNumber} onChange={(e) => setDiceNumber(Number(e.target.value))} />
+                                    </div>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className='pt-6'>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50' onClick={() => setIsDialogCreateAbilityOpen(false)}>
+                            Fechar
+                        </AlertDialogAction>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-tabuleiro2 hover:text-tabuleiro' onClick={() => createAttribute()}>
+                            Salvar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Modal criar item */}
+            <AlertDialog open={isDialogCreateItemOpen} onOpenChange={setIsDialogCreateItemOpen}>
+                <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className='text-tabuleiro2 text-center text-xl'>Novo item</AlertDialogTitle>
+                        <AlertDialogDescription className='text-white font-md text-center'>
+                            <div className='space-y-2'>
+                                <div className='flex flex-col gap-4 mt-4 items-center'>
+                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={12} value={name} onChange={(e) => setName(e.target.value)} />
+                                    <Input type="number" placeholder="Quantidade" className='w-1/2 text-center border-tabuleiro border-2' value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+                                    <Input type="number" placeholder="Peso do Item" className='w-1/2 text-center border-tabuleiro border-2' value={weight} onChange={(e) => setWeight(Number(e.target.value))} />
+                                    <div className='flex justify-center items-center'>
+                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd} onChange={(e) => setDiceQtd(Number(e.target.value))} />
+                                        <p className='text-xl mr-7 ml-7 text-tabuleiro2 font-bold'>d</p>
+                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber} onChange={(e) => setDiceNumber(Number(e.target.value))} />
                                     </div>
                                 </div>
                             </div>
@@ -441,29 +508,55 @@ export default function CharacterDetails() {
                                     <ul className="flex gap-6">
                                         {data?.spells && data.spells.length > 0 ? (
                                             data.spells.map((spells, index) => (
-                                                <li
-                                                    key={index}
-                                                    className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44"
-                                                >
-                                                    <div className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2">
-                                                        <IoSearchSharp className="h-4 w-4 text-white" />
-                                                    </div>
-                                                    <div className='absolute top-0 bg-tabuleiro2 w-full h-1/5 rounded-t-lg text-center z-10'>
-                                                        <p className="font-bold text-md pt-3">{spells.name}</p>
-                                                    </div>
-                                                    <div className='flex flex-col gap-5'>
-                                                        <div className='flex justify-between pt-14'>
-                                                            <p className="text-md font-bold mr-9 p-1">Dano</p>
-                                                            <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
-                                                                {spells.diceqtd}d{spells.dicenumber}
-                                                            </p>
+                                                <li key={index} className="relative w-44 h-60 perspective">
+                                                    <div className={`card ${expandedIndex === index ? 'flipped' : ''}`}>
+                                                        {/* Parte da frente da carta */}
+                                                        <div className="card-front flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-full">
+                                                            <div
+                                                                className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                onClick={() => handleSearchClick(index)}
+                                                            >
+                                                                <IoSearchSharp className="h-4 w-4 text-white" />
+                                                            </div>
+                                                            <div className='absolute top-0 bg-tabuleiro2 w-full h-1/5 rounded-t-lg text-center z-10'>
+                                                                <p className="font-bold text-md pt-3">{spells.name}</p>
+                                                            </div>
+                                                            <div className='flex flex-col gap-5'>
+                                                                <div className='flex justify-between pt-14'>
+                                                                    <p className="text-md font-bold mr-9 p-1">Dano</p>
+                                                                    <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
+                                                                        {spells.diceqtd}d{spells.dicenumber}
+                                                                    </p>
+                                                                </div>
+                                                                <div className='flex justify-between'>
+                                                                    <p className="text-md font-bold p-1 ">{spells.cost_type}</p>
+                                                                    <p className={`text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 rounded-md shadow-md shadow-black/50 mb-6 ${getCostBackgroundClass(spells.cost_type)}`}> {spells.cost} </p>
+                                                                </div>
+                                                            </div>
+                                                            <Button onClick={() => rollDice(spells.dicenumber, spells.diceqtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
                                                         </div>
-                                                        <div className='flex justify-between'>
-                                                            <p className="text-md font-bold p-1 ">{spells.cost_type}</p>
-                                                            <p className={`text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 rounded-md shadow-md shadow-black/50 mb-6 ${getCostBackgroundClass(spells.cost_type)}`}> {spells.cost} </p>
+
+                                                        {/* Parte de trás da carta */}
+                                                        <div className="card-back flex flex-col items-center justify-center bg-tabuleiro rounded-lg h-full border border-2 border-tabuleiro2">
+                                                            <p className="text-white text-xs font-md text-center p-2">{spells.description}</p>
+                                                            <div className=''>
+                                                                <Image
+                                                                    src="/assets/Octahedron.svg"
+                                                                    width={55}
+                                                                    height={55}
+                                                                    alt="Tabuleiro Icon"
+                                                                    className="transform rotate-[-30deg]"
+                                                                />
+                                                            </div>
+
+                                                            <div
+                                                                className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                onClick={() => handleSearchClick(index)}
+                                                            >
+                                                                <IoSearchSharp className="h-4 w-4 text-white" />
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <Button onClick={() => rollDice(spells.dicenumber, spells.diceqtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
                                                 </li>
                                             ))
                                         ) : (
@@ -532,10 +625,15 @@ export default function CharacterDetails() {
                                             <p className="font-bold text-md pt-1">{inventory.item}</p>
                                         </div>
                                         <div className='flex flex-col gap-5'>
-                                            <div className='flex justify-between pt-14'>
-                                                <p className="text-md font-bold mr-9 p-1">Dano</p>
-                                                <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">{inventory.diceqtd}d{inventory.dicenumber}</p>
-                                            </div>
+                                            {/* Condicional para exibir apenas se diceqtd e dicenumber existirem */}
+                                            {inventory.diceqtd && inventory.dicenumber && (
+                                                <div className='flex justify-between pt-14'>
+                                                    <p className="text-md font-bold mr-9 p-1">Dano</p>
+                                                    <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
+                                                        {inventory.diceqtd}d{inventory.dicenumber}
+                                                    </p>
+                                                </div>
+                                            )}
                                             <div className='flex justify-between'>
                                                 <p className="text-md font-bold mr-9 p-1">Quantia</p>
                                                 <p className="text-md font-bold text-right p-1">{inventory.quantity}</p>
@@ -550,10 +648,11 @@ export default function CharacterDetails() {
                             ) : (
                                 <li>Nenhum item disponível</li>
                             )}
-                            <div className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
+                            <div onClick={() => setIsDialogCreateItemOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                 <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
                             </div>
                         </ul>
+
                     </div>
                 </div>
             </div>

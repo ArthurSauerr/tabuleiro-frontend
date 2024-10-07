@@ -54,6 +54,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -86,6 +87,7 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -95,13 +97,52 @@ body {
   }
 
   /* Remover setinhas do input type number */
-input[type='number']::-webkit-inner-spin-button,
-input[type='number']::-webkit-outer-spin-button {
-    -webkit-appearance: none; /* Chrome e Safari */
-    margin: 0; /* Para remover o espaço em volta */
-}
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    /* Chrome e Safari */
+    margin: 0;
+    /* Para remover o espaço em volta */
+  }
 
-input[type='number'] {
-    -moz-appearance: textfield; /* Firefox */
-}
+  input[type='number'] {
+    -moz-appearance: textfield;
+    /* Firefox */
+  }
+
+  .perspective {
+    perspective: 1000px;
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+
+  .card-front,
+  .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    /* Ajuste conforme necessário */
+  }
+
+  .card-front {
+    z-index: 2;
+    /* A face da frente da carta */
+  }
+
+  .card-back {
+    transform: rotateY(180deg);
+    /* A face de trás da carta */
+  }
+
+  .flipped {
+    transform: rotateY(180deg);
+  }
 }
