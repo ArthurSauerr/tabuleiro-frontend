@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
+import { FaRegTrashCan } from "react-icons/fa6";
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -44,6 +45,9 @@ export default function CharacterDetails() {
     const [isDialogCreateAbilityOpen, setIsDialogCreateAbilityOpen] = useState(false);
     const [isDialogCreateAttributeOpen, setIsDialogCreateAttributeOpen] = useState(false);
     const [isDialogCreateItemOpen, setIsDialogCreateItemOpen] = useState(false);
+    const [isDialogDeleteItemOpen, setIsDialogDeleteItemOpen] = useState(false);
+    const [isDialogDeleteAbilityOpen, setIsDialogDeleteAbilityOpen] = useState(false);
+    const [isDialogDeleteSpellOpen, setIsDialogDeleteSpellOpen] = useState(false);
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -53,16 +57,50 @@ export default function CharacterDetails() {
     const [diceQtd, setDiceQtd] = useState(null);
     const [quantity, setQuantity] = useState(null);
     const [weight, setWeight] = useState(null);
-
-
     const [value, setValue] = useState(null);
 
-    const [expandedIndex, setExpandedIndex] = useState<number | null>(null); // Estado para rastrear qual magia está expandida
+    const [item_id, setItem_id] = useState(null);
+    const [abl_id, setAbl_id] = useState(null);
+    const [spell_id, setSpell_id] = useState(null);
+
+    const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+    const [healthInput, setHealthInput] = useState<number | null>(null);
+    const [staminaInput, setStaminaInput] = useState<number | null>(null);
+    const [manaInput, setManaInput] = useState<number | null>(null);
+    const [sanityInput, setSanityInput] = useState<number | null>(null);
+    const [moneyInput, setMoneyInput] = useState<number | null>(null);
+
+    const clearFormFields = () => {
+        setName("");
+        setDescription("");
+        setCost(null);
+        setCostType("");
+        setDiceNumber(null);
+        setDiceQtd(null);
+        setQuantity(null);
+        setWeight(null);
+        setValue(null);
+    };
 
     const handleSearchClick = (index: number) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
+    const handleDeleteItemClick = (item_id) => {
+        setItem_id(item_id);
+        setIsDialogDeleteItemOpen(true);
+    };
+
+    const handleDeleteAbilityClick = (abl_id) => {
+        setAbl_id(abl_id);
+        setIsDialogDeleteAbilityOpen(true);
+    };
+
+    const handleDeleteSpellClick = (spell_id) => {
+        setSpell_id(spell_id);
+        setIsDialogDeleteSpellOpen(true);
+    };
 
     useEffect(() => {
         const fetchCharacterData = async () => {
@@ -73,6 +111,11 @@ export default function CharacterDetails() {
                     });
                     setCharacterData(response.data);
                     console.log(response.data);
+                    setHealthInput(Math.round(response.data.character.current_health));
+                    setStaminaInput(Math.round(response.data.character.current_stamina));
+                    setManaInput(Math.round(response.data.character.current_mana));
+                    setSanityInput(Math.round(response.data.character.current_sanity));
+                    setMoneyInput(Math.round(response.data.character.money));
                     setLoading(false);
                 } catch (error) {
                     console.error('Erro ao buscar detalhes do personagem: ', error);
@@ -110,6 +153,61 @@ export default function CharacterDetails() {
         }
     };
 
+    const handleHealthChange = (e) => {
+        const newHealth = e.target.value;
+        setHealthInput(newHealth);
+    };
+    const handleStaminaChange = (e) => {
+        const newStamina = e.target.value;
+        setStaminaInput(newStamina);
+    };
+    const handleManaChange = (e) => {
+        const newMana = e.target.value;
+        setManaInput(newMana);
+    };
+    const handleSanityChange = (e) => {
+        const newSanity = e.target.value;
+        setSanityInput(newSanity);
+    };
+    const handleMoneyChange = (e) => {
+        const newMoney = e.target.value;
+        setMoneyInput(newMoney);
+    };
+
+    const updateCharacter = async () => {
+        const updatedCharacterData = {
+            current_health: healthInput,
+            current_stamina: staminaInput,
+            current_mana: manaInput,
+            current_sanity: sanityInput,
+            money: moneyInput,
+        };
+
+        try {
+            const response: AxiosResponse = await axios.put(
+                `https://tabuleiro-backend.onrender.com/characters/update/${id}`,
+                updatedCharacterData,
+                {
+                    withCredentials: true,
+                }
+            );
+            console.log(response.data);
+            setCharacterData((prevState) => ({
+                ...prevState,
+                character: {
+                    ...prevState.character,
+                    current_health: healthInput,
+                    current_stamina: staminaInput,
+                    current_mana: manaInput,
+                    current_sanity: sanityInput,
+                    money: moneyInput,
+                },
+            }));
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao atualizar os dados: ', error);
+        }
+    };
+
     const createSpell = async () => {
         const spellData = {
             name: name,
@@ -131,8 +229,26 @@ export default function CharacterDetails() {
             });
             setCharacterData(response.data);
             setIsDialogCreateSpellOpen(false);
+            clearFormFields();
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar ataque: ', error);
+        }
+    };
+
+    const deleteSpell = async () => {
+        try {
+            await axios.delete(`https://tabuleiro-backend.onrender.com/spells/delete/${id}/${spell_id}`, {
+                withCredentials: true,
+            });
+
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setCharacterData(response.data);
+            setIsDialogDeleteSpellOpen(false);
+            setExpandedIndex(null);
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao excluir ataque: ', error);
         }
     };
 
@@ -153,8 +269,25 @@ export default function CharacterDetails() {
             });
             setCharacterData(response.data);
             setIsDialogCreateAbilityOpen(false);
+            clearFormFields();
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar habilidade: ', error);
+        }
+    };
+
+    const deleteAbility = async () => {
+        try {
+            await axios.delete(`https://tabuleiro-backend.onrender.com/ability/delete/${id}/${abl_id}`, {
+                withCredentials: true,
+            });
+
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setCharacterData(response.data);
+            setIsDialogDeleteAbilityOpen(false);
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao excluir habilidade: ', error);
         }
     };
 
@@ -176,6 +309,7 @@ export default function CharacterDetails() {
             });
             setCharacterData(response.data);
             setIsDialogCreateAttributeOpen(false);
+            clearFormFields();
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar atributo: ', error);
         }
@@ -192,7 +326,7 @@ export default function CharacterDetails() {
         };
 
         try {
-            await axios.post('https://tabuleiro-backend.onrender.com/attributes/create', itemData, {
+            await axios.post('https://tabuleiro-backend.onrender.com/inventory/create', itemData, {
                 withCredentials: true,
             });
 
@@ -201,8 +335,25 @@ export default function CharacterDetails() {
             });
             setCharacterData(response.data);
             setIsDialogCreateItemOpen(false);
+            clearFormFields();
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar item: ', error);
+        }
+    };
+
+    const deleteItem = async () => {
+        try {
+            await axios.delete(`https://tabuleiro-backend.onrender.com/inventory/delete/${id}/${item_id}`, {
+                withCredentials: true,
+            });
+
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setCharacterData(response.data);
+            setIsDialogDeleteItemOpen(false);
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao excluir item: ', error);
         }
     };
 
@@ -241,8 +392,8 @@ export default function CharacterDetails() {
                             {diceResults.length > 0 ? (
                                 <div className='space-y-2'>
                                     <div className='grid grid-cols-2 gap-2 gap-x-4 font-bold'>
-                                        <p className='text-right'>Dados: </p>
-                                        <span className='font-bold text-tabuleiro2 text-left'>{diceResults.join(', ')}</span>
+                                        <p className='text-right text-lg'>Dados: </p>
+                                        <span className='font-bold text-tabuleiro2 text-left text-lg'>{diceResults.join(', ')}</span>
                                         <p className='text-right'>Soma: </p>
                                         <span className='font-bold text-tabuleiro2 text-left'>{diceSumResults}</span>
                                         <p className='text-right'>Maior valor: </p>
@@ -383,11 +534,86 @@ export default function CharacterDetails() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className='pt-6'>
-                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50' onClick={() => setIsDialogCreateAbilityOpen(false)}>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50' onClick={() => setIsDialogCreateItemOpen(false)}>
                             Fechar
                         </AlertDialogAction>
-                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-tabuleiro2 hover:text-tabuleiro' onClick={() => createAttribute()}>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-tabuleiro2 hover:text-tabuleiro' onClick={() => createItem()}>
                             Salvar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Modal excluir item */}
+            <AlertDialog open={isDialogDeleteItemOpen} onOpenChange={setIsDialogDeleteItemOpen}>
+                <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className='text-tabuleiro2 text-center text-xl'>Excluir item</AlertDialogTitle>
+                        <AlertDialogDescription className='text-white font-md text-center'>
+                            <div className='space-y-2'>
+                                <div className='flex-col '>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Tem certeza que deseja excluir?</p>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Essa ação não poderá ser desfeita.</p>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className='pt-6'>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50' onClick={() => setIsDialogDeleteItemOpen(false)}>
+                            Cancelar
+                        </AlertDialogAction>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-healthBar hover:text-white' onClick={() => deleteItem()}>
+                            Excluir
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Modal excluir habilidade */}
+            <AlertDialog open={isDialogDeleteAbilityOpen} onOpenChange={setIsDialogDeleteAbilityOpen}>
+                <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className='text-tabuleiro2 text-center text-xl'>Excluir habilidade</AlertDialogTitle>
+                        <AlertDialogDescription className='text-white font-md text-center'>
+                            <div className='space-y-2'>
+                                <div className='flex-col '>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Tem certeza que deseja excluir?</p>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Essa ação não poderá ser desfeita.</p>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className='pt-6'>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50' onClick={() => setIsDialogDeleteAbilityOpen(false)}>
+                            Cancelar
+                        </AlertDialogAction>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-healthBar hover:text-white' onClick={() => deleteAbility()}>
+                            Excluir
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Modal excluir ataque */}
+            <AlertDialog open={isDialogDeleteSpellOpen} onOpenChange={setIsDialogDeleteSpellOpen}>
+                <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className='text-tabuleiro2 text-center text-xl'>Excluir ataque</AlertDialogTitle>
+                        <AlertDialogDescription className='text-white font-md text-center'>
+                            <div className='space-y-2'>
+                                <div className='flex-col '>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Tem certeza que deseja excluir?</p>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Essa ação não poderá ser desfeita.</p>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className='pt-6'>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50' onClick={() => setIsDialogDeleteSpellOpen(false)}>
+                            Cancelar
+                        </AlertDialogAction>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-healthBar hover:text-white' onClick={() => deleteSpell()}>
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -395,7 +621,7 @@ export default function CharacterDetails() {
 
             <Navbar />
             <div className="flex items-center h-screen p-4">
-                <div className="flex flex-col ml-10 pb-12">
+                <div className="flex flex-col ml-24 pb-12">
                     <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">{data.character.name}</h1>
                     <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
                         <div className='bg-tabuleiro/15 p-6 rounded-xl'>
@@ -410,62 +636,165 @@ export default function CharacterDetails() {
                                 <p className='font-md'>{data.character.nacionality}</p>
                                 <p className='font-md text-right'>{data.character.sub_class}</p>
                             </div>
+
                             {/* Progresso de Vida */}
-                            <div className="flex justify-between mt-4">
-                                <p className="font-bold mb-1">Vida</p>
-                                <p className='font-md'>
-                                    {Math.round(data.character.current_health)} / {Math.round(data.character.max_health)}
-                                </p>
+                            <div className="relative w-full mt-4">
+                                <div className="flex justify-between mb-1">
+                                    <p className="font-bold">Vida</p>
+                                    <div className='flex'>
+                                        <input
+                                            type="number"
+                                            value={healthInput}
+                                            onChange={handleHealthChange}
+                                            onBlur={updateCharacter}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                        <p className="font-md">
+                                            / {Math.round(data.character.max_health)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <button
+                                        className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
+                                        -
+                                    </button>
+                                    <Progress
+                                        value={(data.character.current_health / data.character.max_health) * 100}
+                                        variant="health"
+                                        indicatorVariant="health"
+                                    />
+                                    <button
+                                        className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
+                                        +
+                                    </button>
+                                </div>
                             </div>
-                            <Progress
-                                value={data.character.current_health / data.character.max_health * 100}
-                                variant="health"
-                                indicatorVariant="health"
-                            />
 
                             {/* Progresso de Stamina */}
-                            <div className="flex justify-between mt-6">
-                                <p className="font-bold mb-1">Stamina</p>
-                                <p className='font-md'>
-                                    {Math.round(data.character.current_stamina)} / {Math.round(data.character.max_stamina)}
-                                </p>
+                            <div className="relative w-full mt-6">
+                                <div className="flex justify-between mb-1">
+                                    <p className="font-bold">Stamina</p>
+                                    <div className='flex'>
+                                        <input
+                                            type="number"
+                                            value={staminaInput}
+                                            onChange={handleStaminaChange}
+                                            onBlur={updateCharacter}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                        <p className="font-md">
+                                            / {Math.round(data.character.max_stamina)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <button
+                                        className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
+                                        -
+                                    </button>
+                                    <Progress
+                                        value={(data.character.current_stamina / data.character.max_stamina) * 100}
+                                        variant="stamina"
+                                        indicatorVariant="stamina"
+                                    />
+                                    <button
+                                        className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
+                                        +
+                                    </button>
+                                </div>
                             </div>
-                            <Progress
-                                value={data.character.current_stamina / data.character.max_stamina * 100}
-                                variant="stamina"
-                                indicatorVariant="stamina"
-                            />
 
                             {/* Progresso de Mana */}
-                            <div className="flex justify-between mt-6">
-                                <p className="font-bold mb-1">Mana</p>
-                                <p className='font-md'>
-                                    {Math.round(data.character.current_mana)} / {Math.round(data.character.max_mana)}
-                                </p>
+                            <div className="relative w-full mt-6">
+                                <div className="flex justify-between mb-1">
+                                    <p className="font-bold">Mana</p>
+                                    <div className='flex'>
+                                        <input
+                                            type="number"
+                                            value={manaInput}
+                                            onChange={handleManaChange}
+                                            onBlur={updateCharacter}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                        <p className="font-md">
+                                            / {Math.round(data.character.max_mana)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <button
+                                        className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
+                                        -
+                                    </button>
+                                    <Progress
+                                        value={(data.character.current_mana / data.character.max_mana) * 100}
+                                        variant="mana"
+                                        indicatorVariant="mana"
+                                    />
+                                    <button
+                                        className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
+                                        +
+                                    </button>
+                                </div>
                             </div>
-                            <Progress
-                                value={data.character.current_mana / data.character.max_mana * 100}
-                                variant="mana"
-                                indicatorVariant="mana"
-                            />
 
                             {/* Progresso de Sanidade */}
-                            <div className="flex justify-between mt-6">
-                                <p className="font-bold mb-1">Sanidade</p>
-                                <p className='font-md'>
-                                    {Math.round(data.character.current_sanity)} / {Math.round(data.character.max_sanity)}
-                                </p>
+                            <div className="relative w-full mt-6">
+                                <div className="flex justify-between mb-1">
+                                    <p className="font-bold">Sanidade</p>
+                                    <div className='flex'>
+                                        <input
+                                            type="number"
+                                            value={sanityInput}
+                                            onChange={handleSanityChange}
+                                            onBlur={updateCharacter}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                        <p className="font-md">
+                                            / {Math.round(data.character.max_sanity)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <button
+                                        className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
+                                        -
+                                    </button>
+                                    <Progress
+                                        value={(data.character.current_sanity / data.character.max_sanity) * 100}
+                                        variant="sanity"
+                                        indicatorVariant="sanity"
+                                    />
+                                    <button
+                                        className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
+                                        +
+                                    </button>
+                                </div>
                             </div>
-                            <Progress
-                                value={data.character.current_sanity / data.character.max_sanity * 100}
-                                variant="sanity"
-                                indicatorVariant="sanity"
-                            />
-                            <div className="flex justify-between mt-6">
-                                <p className="font-bold mb-1">Dinheiro</p>
-                                <p className='font-md'>
-                                    {Math.round(data.character.money)}
-                                </p>
+
+                            {/* Progresso de Dinheiro */}
+                            <div className="relative w-full mt-6">
+                                <div className="flex justify-between mb-1">
+                                    <p className="font-bold">Dinheiro</p>
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            className="text-white font-bold text-lg bg-none p-0 outline-none">
+                                            -
+                                        </button>
+                                        <input
+                                            type="number"
+                                            value={moneyInput}
+                                            onChange={handleMoneyChange}
+                                            onBlur={updateCharacter}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                        <button
+                                            className="text-white font-bold text-lg bg-none p-0 outline-none">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -538,6 +867,12 @@ export default function CharacterDetails() {
 
                                                         {/* Parte de trás da carta */}
                                                         <div className="card-back flex flex-col items-center justify-center bg-tabuleiro rounded-lg h-full border border-2 border-tabuleiro2">
+                                                            <div
+                                                                className="absolute top-5 -right-2 z-20 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                onClick={() => handleDeleteSpellClick(spells.id)}
+                                                            >
+                                                                <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                            </div>
                                                             <p className="text-white text-xs font-md text-center p-2">{spells.description}</p>
                                                             <div className=''>
                                                                 <Image
@@ -582,13 +917,19 @@ export default function CharacterDetails() {
                                             data.abilities.map((abilities, index) => (
                                                 <li
                                                     key={index}
-                                                    className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44"
+                                                    className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 group"
                                                 >
+                                                    <div
+                                                        className="absolute -top-2 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                        onClick={() => handleDeleteAbilityClick(abilities.id)}
+                                                    >
+                                                        <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                    </div>
                                                     <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
                                                         <p className="font-bold text-md pt-1">{abilities.name}</p>
                                                     </div>
                                                     <ScrollArea
-                                                        className='overflow-y-auto text-xs p-2 pt-6  break-words max-h-[220px] z-10'
+                                                        className='overflow-y-auto text-xs p-2 pt-6 break-words max-h-[220px] z-10'
                                                     >
                                                         <p>{abilities.description}</p>
                                                     </ScrollArea>
@@ -606,6 +947,7 @@ export default function CharacterDetails() {
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>
@@ -613,19 +955,25 @@ export default function CharacterDetails() {
                 <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Inventário</h1>
                 <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
                     <p className=" text-center text-md font-bold text-tabuleiro2">Peso dos itens: {totalWeight}</p>
+                    <p className='text-center text-xs'>(obs: no momento o peso total não leva em consideração a quantidade de itens)</p>
                     <div className='bg-tabuleiro/15 p-4 pb-4 rounded-xl'>
                         <ul className="grid grid-cols-7 gap-6">
                             {data?.inventory && data.inventory.length > 0 ? (
                                 data.inventory.map((inventory, index) => (
                                     <li
                                         key={index}
-                                        className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44"
+                                        className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 group"
                                     >
-                                        <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
+                                        <div
+                                            className="absolute -top-2 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                            onClick={() => handleDeleteItemClick(inventory.id)}
+                                        >
+                                            <FaRegTrashCan className="h-4 w-4 text-white" />
+                                        </div>
+                                        <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-10'>
                                             <p className="font-bold text-md pt-1">{inventory.item}</p>
                                         </div>
                                         <div className='flex flex-col gap-5'>
-                                            {/* Condicional para exibir apenas se diceqtd e dicenumber existirem */}
                                             {inventory.diceqtd && inventory.dicenumber && (
                                                 <div className='flex justify-between pt-14'>
                                                     <p className="text-md font-bold mr-9 p-1">Dano</p>
