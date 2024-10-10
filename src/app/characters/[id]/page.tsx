@@ -66,11 +66,7 @@ export default function CharacterDetails() {
 
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
-    const [healthInput, setHealthInput] = useState<number | null>(null);
-    const [staminaInput, setStaminaInput] = useState<number | null>(null);
-    const [manaInput, setManaInput] = useState<number | null>(null);
-    const [sanityInput, setSanityInput] = useState<number | null>(null);
-    const [moneyInput, setMoneyInput] = useState<number | null>(null);
+    const [editedCharStatus, setEditedCharStatus] = useState({ current_health: undefined, max_health: undefined, current_stamina: undefined, max_stamina: undefined, current_mana: undefined, max_mana: undefined, current_sanity: undefined, max_sanity: undefined, money: undefined })
 
     const [editingAbilityIndex, setEditingAbilityIndex] = useState<number | null>(null);
     const [editedAbility, setEditedAbility] = useState({ name: '', description: '' });
@@ -119,11 +115,19 @@ export default function CharacterDetails() {
                     });
                     setCharacterData(response.data);
                     console.log(response.data);
-                    setHealthInput(Math.round(response.data.character.current_health));
-                    setStaminaInput(Math.round(response.data.character.current_stamina));
-                    setManaInput(Math.round(response.data.character.current_mana));
-                    setSanityInput(Math.round(response.data.character.current_sanity));
-                    setMoneyInput(Math.round(response.data.character.money));
+
+                    setEditedCharStatus({
+                        current_health: response.data.character.current_health,
+                        max_health: response.data.character.max_health,
+                        current_stamina: response.data.character.current_stamina,
+                        max_stamina: response.data.character.max_stamina,
+                        current_mana: response.data.character.current_mana,
+                        max_mana: response.data.character.max_mana,
+                        current_sanity: response.data.character.current_sanity,
+                        max_sanity: response.data.character.max_sanity,
+                        money: response.data.character.money
+                    });
+
                     setLoading(false);
                 } catch (error) {
                     console.error('Erro ao buscar detalhes do personagem: ', error);
@@ -161,27 +165,6 @@ export default function CharacterDetails() {
         }
     };
 
-    const handleHealthChange = (e) => {
-        const newHealth = e.target.value;
-        setHealthInput(newHealth);
-    };
-    const handleStaminaChange = (e) => {
-        const newStamina = e.target.value;
-        setStaminaInput(newStamina);
-    };
-    const handleManaChange = (e) => {
-        const newMana = e.target.value;
-        setManaInput(newMana);
-    };
-    const handleSanityChange = (e) => {
-        const newSanity = e.target.value;
-        setSanityInput(newSanity);
-    };
-    const handleMoneyChange = (e) => {
-        const newMoney = e.target.value;
-        setMoneyInput(newMoney);
-    };
-
     const handleEditAbilityClick = (ability) => {
         if (editingAbilityIndex === ability.id) {
             setEditingAbilityIndex(null);
@@ -195,20 +178,34 @@ export default function CharacterDetails() {
     };
 
     const handleEditCharClick = (character) => {
-        setIsEditChar(true);
-        setEditedChar({
-            name: character.name,
-            age: character.age,
-            nacionality: character.nacionality,
-            class: character.char_class,
-            sub_class: character.char_subclass,
-        });
+        if (isEditChar) {
+            setIsEditChar(false);
+        } else {
+            setIsEditChar(true);
+            setEditedChar({
+                name: character.name,
+                age: character.age,
+                nacionality: character.nacionality,
+                class: character.char_class,
+                sub_class: character.char_subclass,
+            });
+        }
     }
 
     const handleInputChangeChar = (e) => {
         if (e && e.target) {
             const { name, value } = e.target;
             setEditedChar((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+    };
+
+    const handleInputChangeCharStatus = (e) => {
+        if (e && e.target) {
+            const { name, value } = e.target;
+            setEditedCharStatus((prev) => ({
                 ...prev,
                 [name]: value,
             }));
@@ -227,11 +224,15 @@ export default function CharacterDetails() {
 
     const updateCharacterStatus = async () => {
         const updatedCharacterData = {
-            current_health: healthInput,
-            current_stamina: staminaInput,
-            current_mana: manaInput,
-            current_sanity: sanityInput,
-            money: moneyInput,
+            current_health: editedCharStatus.current_health,
+            max_health: editedCharStatus.max_health,
+            current_stamina: editedCharStatus.current_stamina,
+            max_stamina: editedCharStatus.max_stamina,
+            current_mana: editedCharStatus.current_mana,
+            max_mana: editedCharStatus.max_mana,
+            current_sanity: editedCharStatus.current_sanity,
+            max_sanity: editedCharStatus.max_sanity,
+            money: editedCharStatus.money
         };
 
         try {
@@ -247,11 +248,15 @@ export default function CharacterDetails() {
                 ...prevState,
                 character: {
                     ...prevState.character,
-                    current_health: healthInput,
-                    current_stamina: staminaInput,
-                    current_mana: manaInput,
-                    current_sanity: sanityInput,
-                    money: moneyInput,
+                    current_health: editedCharStatus.current_health,
+                    max_health: editedCharStatus.max_health,
+                    current_stamina: editedCharStatus.current_stamina,
+                    max_stamina: editedCharStatus.max_stamina,
+                    current_mana: editedCharStatus.current_mana,
+                    max_mana: editedCharStatus.max_mana,
+                    current_sanity: editedCharStatus.current_sanity,
+                    max_sanity: editedCharStatus.max_sanity,
+                    money: editedCharStatus.money,
                 },
             }));
         } catch (error: AxiosError | any) {
@@ -807,14 +812,23 @@ export default function CharacterDetails() {
                                     <div className='flex'>
                                         <input
                                             type="number"
-                                            value={healthInput}
-                                            onChange={handleHealthChange}
+                                            name="current_health"
+                                            value={Math.round(editedCharStatus.current_health)}
+                                            onChange={handleInputChangeCharStatus}
                                             onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
-                                            / {Math.round(data.character.max_health)}
+                                            /
                                         </p>
+                                        <input
+                                            type="number"
+                                            name="max_health"
+                                            value={Math.round(editedCharStatus.max_health)}
+                                            onChange={handleInputChangeCharStatus}
+                                            onBlur={updateCharacterStatus}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
                                     </div>
                                 </div>
                                 <div className="relative">
@@ -841,14 +855,23 @@ export default function CharacterDetails() {
                                     <div className='flex'>
                                         <input
                                             type="number"
-                                            value={staminaInput}
-                                            onChange={handleStaminaChange}
+                                            name="current_stamina"
+                                            value={Math.round(editedCharStatus.current_stamina)}
+                                            onChange={handleInputChangeCharStatus}
                                             onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
-                                            / {Math.round(data.character.max_stamina)}
+                                            /
                                         </p>
+                                        <input
+                                            type="number"
+                                            name="max_stamina"
+                                            value={Math.round(editedCharStatus.max_stamina)}
+                                            onChange={handleInputChangeCharStatus}
+                                            onBlur={updateCharacterStatus}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
                                     </div>
                                 </div>
                                 <div className="relative">
@@ -875,14 +898,23 @@ export default function CharacterDetails() {
                                     <div className='flex'>
                                         <input
                                             type="number"
-                                            value={manaInput}
-                                            onChange={handleManaChange}
+                                            name="current_mana"
+                                            value={Math.round(editedCharStatus.current_mana)}
+                                            onChange={handleInputChangeCharStatus}
                                             onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
-                                            / {Math.round(data.character.max_mana)}
+                                            /
                                         </p>
+                                        <input
+                                            type="number"
+                                            name="max_mana"
+                                            value={Math.round(editedCharStatus.max_mana)}
+                                            onChange={handleInputChangeCharStatus}
+                                            onBlur={updateCharacterStatus}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
                                     </div>
                                 </div>
                                 <div className="relative">
@@ -909,14 +941,23 @@ export default function CharacterDetails() {
                                     <div className='flex'>
                                         <input
                                             type="number"
-                                            value={sanityInput}
-                                            onChange={handleSanityChange}
+                                            name="current_sanity"
+                                            value={Math.round(editedCharStatus.current_sanity)}
+                                            onChange={handleInputChangeCharStatus}
                                             onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
-                                            / {Math.round(data.character.max_sanity)}
+                                            /
                                         </p>
+                                        <input
+                                            type="number"
+                                            name="max_sanity"
+                                            value={Math.round(editedCharStatus.max_sanity)}
+                                            onChange={handleInputChangeCharStatus}
+                                            onBlur={updateCharacterStatus}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
                                     </div>
                                 </div>
                                 <div className="relative">
@@ -947,8 +988,9 @@ export default function CharacterDetails() {
                                         </button>
                                         <input
                                             type="number"
-                                            value={moneyInput}
-                                            onChange={handleMoneyChange}
+                                            name="money"
+                                            value={Math.round(editedCharStatus.money)}
+                                            onChange={handleInputChangeCharStatus}
                                             onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
