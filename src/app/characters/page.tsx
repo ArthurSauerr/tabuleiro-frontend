@@ -36,7 +36,7 @@ export default function Characters() {
                 }
             })
             .finally(() => {
-                setLoading(false); // Desativa o estado de carregamento após a requisição
+                setLoading(false);
             });
     };
 
@@ -75,9 +75,8 @@ export default function Characters() {
                                     >
                                         <li className="text-white font-medium text-center group-hover:opacity-0 transition-opacity duration-150 ease-in-out">
                                             <p className='font-bold'>{character.name}</p>
-                                            <p className='mb-6 font-light'>{character.class}</p>
+                                            <p className='mb-6 font-light'>{character.char_class}</p>
                                             <p className='font-light'>Vida: {Math.round(character.current_health)} / {Math.round(character.max_health)}</p>
-                                            <p className='font-light'>ID: {character.id}</p>
                                         </li>
                                         <div className="absolute inset-0 flex justify-center items-center hidden group-hover:flex transition-opacity duration-150 ease-in-out">
                                             <Button onClick={() => handleAccessClick(character.id)} className="bg-tabuleiro text-white font-md py-2 px-4 rounded hover:bg-tabuleiro2">Acessar</Button>

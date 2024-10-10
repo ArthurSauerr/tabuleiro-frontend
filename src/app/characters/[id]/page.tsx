@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { FaRegTrashCan } from "react-icons/fa6";
+import { TbPencil } from "react-icons/tb";
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -70,6 +71,13 @@ export default function CharacterDetails() {
     const [manaInput, setManaInput] = useState<number | null>(null);
     const [sanityInput, setSanityInput] = useState<number | null>(null);
     const [moneyInput, setMoneyInput] = useState<number | null>(null);
+
+    const [editingAbilityIndex, setEditingAbilityIndex] = useState<number | null>(null);
+    const [editedAbility, setEditedAbility] = useState({ name: '', description: '' });
+
+    const [isEditChar, setIsEditChar] = useState(false);
+    const [editedChar, setEditedChar] = useState({ name: '', age: null, class: '', sub_class: '', nacionality: '' });
+
 
     const clearFormFields = () => {
         setName("");
@@ -174,7 +182,50 @@ export default function CharacterDetails() {
         setMoneyInput(newMoney);
     };
 
-    const updateCharacter = async () => {
+    const handleEditAbilityClick = (ability) => {
+        if (editingAbilityIndex === ability.id) {
+            setEditingAbilityIndex(null);
+        } else {
+            setEditingAbilityIndex(ability.id);
+            setEditedAbility({
+                name: ability.name,
+                description: ability.description
+            });
+        }
+    };
+
+    const handleEditCharClick = (character) => {
+        setIsEditChar(true);
+        setEditedChar({
+            name: character.name,
+            age: character.age,
+            nacionality: character.nacionality,
+            class: character.char_class,
+            sub_class: character.char_subclass,
+        });
+    }
+
+    const handleInputChangeChar = (e) => {
+        if (e && e.target) {
+            const { name, value } = e.target;
+            setEditedChar((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+    };
+
+    const handleInputChangeAbility = (e) => {
+        if (e && e.target) {
+            const { name, value } = e.target;
+            setEditedAbility((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+    };
+
+    const updateCharacterStatus = async () => {
         const updatedCharacterData = {
             current_health: healthInput,
             current_stamina: staminaInput,
@@ -203,6 +254,37 @@ export default function CharacterDetails() {
                     money: moneyInput,
                 },
             }));
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao atualizar os dados: ', error);
+        }
+    };
+
+    const updateCharacterBio = async () => {
+        const updatedCharacterData = {
+            name: editedChar.name,
+            age: editedChar.age,
+            nacionality: editedChar.nacionality,
+            char_class: editedChar.class,
+            char_subclass: editedChar.sub_class,
+        };
+
+        try {
+            const response: AxiosResponse = await axios.put(
+                `https://tabuleiro-backend.onrender.com/characters/update/${id}`,
+                updatedCharacterData,
+                {
+                    withCredentials: true,
+                }
+            );
+            console.log(response.data);
+            setCharacterData((prevData) => ({
+                ...prevData,
+                character: {
+                    ...prevData.character,
+                    ...updatedCharacterData,
+                },
+            }));
+            setIsEditChar(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao atualizar os dados: ', error);
         }
@@ -272,6 +354,32 @@ export default function CharacterDetails() {
             clearFormFields();
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar habilidade: ', error);
+        }
+    };
+
+    const updateAbility = async () => {
+        const updatedAbilityData = {
+            name: editedAbility.name,
+            description: editedAbility.description,
+            char_id: id,
+            abl_id: editingAbilityIndex,
+        };
+
+        try {
+            await axios.put(
+                `https://tabuleiro-backend.onrender.com/ability/update`,
+                updatedAbilityData,
+                {
+                    withCredentials: true,
+                }
+            );
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setEditingAbilityIndex(null);
+            setCharacterData(response.data);
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao atualizar os dados: ', error);
         }
     };
 
@@ -623,19 +731,74 @@ export default function CharacterDetails() {
             <div className="flex items-center h-screen p-4">
                 <div className="flex flex-col ml-24 pb-12">
                     <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">{data.character.name}</h1>
-                    <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
+                    <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl relative group'>
                         <div className='bg-tabuleiro/15 p-6 rounded-xl'>
-                            <div className='grid grid-cols-2 gap-x-4'>
-                                <p className='font-bold'>Idade</p>
-                                <p className='font-bold text-right'>Classe</p>
-                                <p className='font-md mb-4'>{data.character.age} anos</p>
-                                <p className='font-md mb-4 text-right'>{data.character.class}</p>
-
-                                <p className='font-bold'>País</p>
-                                <p className='font-bold text-right'>Sub-classe</p>
-                                <p className='font-md'>{data.character.nacionality}</p>
-                                <p className='font-md text-right'>{data.character.sub_class}</p>
+                            <div className="absolute -top-2 -right-2 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                onClick={() => handleEditCharClick(data.character)}
+                            >
+                                <TbPencil className="h-4 w-4 text-white" />
                             </div>
+                            {isEditChar ? (
+                                <>
+                                    <div className='grid grid-cols-2 gap-x-4'>
+                                        <p className='font-bold'>Idade</p>
+                                        <p className='font-bold text-right'>Classe</p>
+                                        <input
+                                            type="number"
+                                            name="age"
+                                            maxLength={12}
+                                            value={editedChar.age}
+                                            onChange={handleInputChangeChar}
+                                            className="bg-transparent border-2 border-tabuleiro text-white text-left rounded-md w-full py-1 "
+                                        />
+                                        <input
+                                            type="text"
+                                            name="class"
+                                            maxLength={12}
+                                            value={editedChar.class}
+                                            onChange={handleInputChangeChar}
+                                            className="bg-transparent border-2 border-tabuleiro text-white text-right rounded-md w-full py-1 "
+                                        />
+
+                                        <p className='font-bold'>País</p>
+                                        <p className='font-bold text-right'>Sub-classe</p>
+                                        <input
+                                            type="text"
+                                            name="nacionality"
+                                            maxLength={12}
+                                            value={editedChar.nacionality}
+                                            onChange={handleInputChangeChar}
+                                            className="bg-transparent border-2 border-tabuleiro text-white text-left rounded-md w-full py-1 "
+                                        />
+                                        <input
+                                            type="text"
+                                            name="sub_class"
+                                            maxLength={12}
+                                            value={editedChar.sub_class}
+                                            onChange={handleInputChangeChar}
+                                            className="bg-transparent border-2 border-tabuleiro text-white text-right rounded-md w-full py-1 "
+                                        />
+
+                                    </div>
+                                    <div className='flex items-center justify-center pt-2'>
+                                        <Button variant={'tabuleiro'} onClick={() => updateCharacterBio()}>Salvar</Button>
+                                    </div>
+
+                                </>
+                            ) : (
+                                <div className='grid grid-cols-2 gap-x-4'>
+                                    <p className='font-bold'>Idade</p>
+                                    <p className='font-bold text-right'>Classe</p>
+                                    <p className='font-md mb-4'>{data.character.age} anos</p>
+                                    <p className='font-md mb-4 text-right'>{data.character.char_class}</p>
+
+                                    <p className='font-bold'>País</p>
+                                    <p className='font-bold text-right'>Sub-classe</p>
+                                    <p className='font-md'>{data.character.nacionality}</p>
+                                    <p className='font-md text-right'>{data.character.char_subclass}</p>
+                                </div>
+                            )}
+
 
                             {/* Progresso de Vida */}
                             <div className="relative w-full mt-4">
@@ -646,7 +809,7 @@ export default function CharacterDetails() {
                                             type="number"
                                             value={healthInput}
                                             onChange={handleHealthChange}
-                                            onBlur={updateCharacter}
+                                            onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -680,7 +843,7 @@ export default function CharacterDetails() {
                                             type="number"
                                             value={staminaInput}
                                             onChange={handleStaminaChange}
-                                            onBlur={updateCharacter}
+                                            onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -714,7 +877,7 @@ export default function CharacterDetails() {
                                             type="number"
                                             value={manaInput}
                                             onChange={handleManaChange}
-                                            onBlur={updateCharacter}
+                                            onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -748,7 +911,7 @@ export default function CharacterDetails() {
                                             type="number"
                                             value={sanityInput}
                                             onChange={handleSanityChange}
-                                            onBlur={updateCharacter}
+                                            onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -786,7 +949,7 @@ export default function CharacterDetails() {
                                             type="number"
                                             value={moneyInput}
                                             onChange={handleMoneyChange}
-                                            onBlur={updateCharacter}
+                                            onBlur={updateCharacterStatus}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <button
@@ -914,25 +1077,52 @@ export default function CharacterDetails() {
                                 <ScrollArea className="w-[1000px] overflow-x-auto pb-5">
                                     <ul className="flex gap-6">
                                         {data?.abilities && data.abilities.length > 0 ? (
-                                            data.abilities.map((abilities, index) => (
+                                            data.abilities.map((ability, index) => (
                                                 <li
                                                     key={index}
                                                     className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 group"
                                                 >
                                                     <div
-                                                        className="absolute -top-2 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                                        onClick={() => handleDeleteAbilityClick(abilities.id)}
+                                                        className="absolute -top-2 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                        onClick={() => handleEditAbilityClick(ability)}
+                                                    >
+                                                        <TbPencil className="h-4 w-4 text-white" />
+                                                    </div>
+                                                    <div
+                                                        className="absolute top-5 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                        onClick={() => handleDeleteAbilityClick(ability.id)}
                                                     >
                                                         <FaRegTrashCan className="h-4 w-4 text-white" />
                                                     </div>
-                                                    <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
-                                                        <p className="font-bold text-md pt-1">{abilities.name}</p>
-                                                    </div>
-                                                    <ScrollArea
-                                                        className='overflow-y-auto text-xs p-2 pt-6 break-words max-h-[220px] z-10'
-                                                    >
-                                                        <p>{abilities.description}</p>
-                                                    </ScrollArea>
+
+                                                    {editingAbilityIndex === ability.id ? (
+                                                        <>
+                                                            <input
+                                                                type="text"
+                                                                name="name"
+                                                                maxLength={12}
+                                                                value={editedAbility.name}
+                                                                onChange={handleInputChangeAbility}
+                                                                className="bg-transparent border-2 border-tabuleiro text-white text-center rounded-md w-full py-1 "
+                                                            />
+                                                            <textarea
+                                                                name="description"
+                                                                value={editedAbility.description}
+                                                                onChange={handleInputChangeAbility}
+                                                                className="bg-transparent border-2 border-tabuleiro text-xs text-white rounded-md w-full h-48 p-2 mt-2"
+                                                            />
+                                                            <Button onClick={() => updateAbility()} variant={'tabuleiro'}>Salvar</Button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
+                                                                <p className="font-bold text-md pt-1">{ability.name}</p>
+                                                            </div>
+                                                            <ScrollArea className='overflow-y-auto text-xs p-2 pt-6 break-words max-h-[220px] z-10'>
+                                                                <p>{ability.description}</p>
+                                                            </ScrollArea>
+                                                        </>
+                                                    )}
                                                 </li>
                                             ))
                                         ) : (
