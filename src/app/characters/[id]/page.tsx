@@ -1351,7 +1351,7 @@ export default function CharacterDetails() {
                                                 </li>
                                             ))
                                         ) : (
-                                            <li>Nenhum ataque disponível</li>
+                                            <li>Nenhuma habilidade disponível</li>
                                         )}
                                         <div onClick={() => setIsDialogCreateAbilityOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                             <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>

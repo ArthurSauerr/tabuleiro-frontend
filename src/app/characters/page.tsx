@@ -16,10 +16,10 @@ export default function Characters() {
     const router = useRouter();
     const [characters, setCharacters] = useState([]);
     const [hasCharacters, setHasCharacters] = useState(false);
-    const [loading, setLoading] = useState(true); // Estado de carregamento
+    const [loading, setLoading] = useState(true);
 
     const checkCharacters = async () => {
-        setLoading(true); // Ativa o estado de carregamento
+        setLoading(true);
         await axios.get('https://tabuleiro-backend.onrender.com/characters/list-of-characters',
             { withCredentials: true }
         )
