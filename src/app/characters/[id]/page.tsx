@@ -22,8 +22,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
-import { FaRegTrashCan } from "react-icons/fa6";
+import { FaC, FaRegTrashCan } from "react-icons/fa6";
 import { TbPencil } from "react-icons/tb";
+import { FaCheck } from "react-icons/fa";
+import { GiD4 } from "react-icons/gi";
+import { GiPerspectiveDiceSix } from "react-icons/gi";
+import { GiDiceEightFacesEight } from "react-icons/gi";
+import { GiD10 } from "react-icons/gi";
+import { GiD12 } from "react-icons/gi";
+import { GiDiceTwentyFacesTwenty } from "react-icons/gi";
+
+
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -66,10 +75,23 @@ export default function CharacterDetails() {
 
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
-    const [editedCharStatus, setEditedCharStatus] = useState({ current_health: undefined, max_health: undefined, current_stamina: undefined, max_stamina: undefined, current_mana: undefined, max_mana: undefined, current_sanity: undefined, max_sanity: undefined, money: undefined })
+    const [editedCharStatus, setEditedCharStatus] = useState({
+        current_health: 0,
+        max_health: 0,
+        current_stamina: 0,
+        max_stamina: 0,
+        current_mana: 0,
+        max_mana: 0,
+        current_sanity: 0,
+        max_sanity: 0,
+        money: 0,
+    });
 
     const [editingAbilityIndex, setEditingAbilityIndex] = useState<number | null>(null);
     const [editedAbility, setEditedAbility] = useState({ name: '', description: '' });
+
+    const [editingAttributeIndex, setEditingAttributeIndex] = useState<number | null>(null);
+    const [editedAttribute, setEditedAttribute] = useState({ name: '', value: 0 });
 
     const [isEditChar, setIsEditChar] = useState(false);
     const [editedChar, setEditedChar] = useState({ name: '', age: null, class: '', sub_class: '', nacionality: '' });
@@ -105,6 +127,8 @@ export default function CharacterDetails() {
         setSpell_id(spell_id);
         setIsDialogDeleteSpellOpen(true);
     };
+
+
 
     useEffect(() => {
         const fetchCharacterData = async () => {
@@ -177,6 +201,18 @@ export default function CharacterDetails() {
         }
     };
 
+    const handleEditAttributeClick = (attribute) => {
+        if (editingAttributeIndex === attribute.id) {
+            setEditingAttributeIndex(null);
+        } else {
+            setEditingAttributeIndex(attribute.id);
+            setEditedAttribute({
+                name: attribute.name,
+                value: attribute.value
+            });
+        }
+    };
+
     const handleEditCharClick = (character) => {
         if (isEditChar) {
             setIsEditChar(false);
@@ -222,17 +258,51 @@ export default function CharacterDetails() {
         }
     };
 
-    const updateCharacterStatus = async () => {
+    const handleInputChangeAttribute = (e) => {
+        if (e && e.target) {
+            const { name, value } = e.target;
+            setEditedAttribute((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+    };
+
+    const subtractCurrentStatus = (statusKey) => {
+        setEditedCharStatus((prevStatus) => {
+            const newStatus = {
+                ...prevStatus,
+                [statusKey]: Math.max((prevStatus[statusKey] || 0) - 10, 0)
+            };
+
+            updateCharacterStatus(newStatus);
+            return newStatus;
+        });
+    };
+
+    const sumCurrentStatus = (statusKey) => {
+        setEditedCharStatus((prevStatus) => {
+            const newStatus = {
+                ...prevStatus,
+                [statusKey]: parseFloat(prevStatus[statusKey] || 0) + 10
+            };
+
+            updateCharacterStatus(newStatus);
+            return newStatus;
+        });
+    };
+
+    const updateCharacterStatus = async (updatedStatus) => {
         const updatedCharacterData = {
-            current_health: editedCharStatus.current_health,
-            max_health: editedCharStatus.max_health,
-            current_stamina: editedCharStatus.current_stamina,
-            max_stamina: editedCharStatus.max_stamina,
-            current_mana: editedCharStatus.current_mana,
-            max_mana: editedCharStatus.max_mana,
-            current_sanity: editedCharStatus.current_sanity,
-            max_sanity: editedCharStatus.max_sanity,
-            money: editedCharStatus.money
+            current_health: updatedStatus.current_health,
+            max_health: updatedStatus.max_health,
+            current_stamina: updatedStatus.current_stamina,
+            max_stamina: updatedStatus.max_stamina,
+            current_mana: updatedStatus.current_mana,
+            max_mana: updatedStatus.max_mana,
+            current_sanity: updatedStatus.current_sanity,
+            max_sanity: updatedStatus.max_sanity,
+            money: updatedStatus.money
         };
 
         try {
@@ -248,15 +318,7 @@ export default function CharacterDetails() {
                 ...prevState,
                 character: {
                     ...prevState.character,
-                    current_health: editedCharStatus.current_health,
-                    max_health: editedCharStatus.max_health,
-                    current_stamina: editedCharStatus.current_stamina,
-                    max_stamina: editedCharStatus.max_stamina,
-                    current_mana: editedCharStatus.current_mana,
-                    max_mana: editedCharStatus.max_mana,
-                    current_sanity: editedCharStatus.current_sanity,
-                    max_sanity: editedCharStatus.max_sanity,
-                    money: editedCharStatus.money,
+                    ...updatedCharacterData,
                 },
             }));
         } catch (error: AxiosError | any) {
@@ -422,6 +484,49 @@ export default function CharacterDetails() {
             });
             setCharacterData(response.data);
             setIsDialogCreateAttributeOpen(false);
+            clearFormFields();
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao cadastrar atributo: ', error);
+        }
+    };
+
+    const updateAttribute = async () => {
+        const updatedAttributeData = {
+            name: editedAttribute.name,
+            value: editedAttribute.value,
+            char_id: id,
+            atr_id: editingAttributeIndex,
+        };
+
+        try {
+            await axios.put(
+                `https://tabuleiro-backend.onrender.com/attributes/update`,
+                updatedAttributeData,
+                {
+                    withCredentials: true,
+                }
+            );
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setEditingAttributeIndex(null);
+            setCharacterData(response.data);
+            clearFormFields();
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao atualizar os dados: ', error);
+        }
+    };
+
+    const deleteAttribute = async (atr_id) => {
+        try {
+            await axios.delete(`https://tabuleiro-backend.onrender.com/attributes/delete/${id}/${atr_id}`, {
+                withCredentials: true,
+            });
+
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setCharacterData(response.data);
             clearFormFields();
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar atributo: ', error);
@@ -733,7 +838,7 @@ export default function CharacterDetails() {
             </AlertDialog>
 
             <Navbar />
-            <div className="flex items-center h-screen p-4">
+            <div className="relative flex items-center h-screen p-4">
                 <div className="flex flex-col ml-24 pb-12">
                     <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">{data.character.name}</h1>
                     <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl relative group'>
@@ -815,7 +920,7 @@ export default function CharacterDetails() {
                                             name="current_health"
                                             value={Math.round(editedCharStatus.current_health)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -826,22 +931,22 @@ export default function CharacterDetails() {
                                             name="max_health"
                                             value={Math.round(editedCharStatus.max_health)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <button
+                                    <button onClick={() => subtractCurrentStatus('current_health')}
                                         className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
                                         -
                                     </button>
                                     <Progress
-                                        value={(data.character.current_health / data.character.max_health) * 100}
+                                        value={(editedCharStatus.current_health / editedCharStatus.max_health) * 100}
                                         variant="health"
                                         indicatorVariant="health"
                                     />
-                                    <button
+                                    <button onClick={() => sumCurrentStatus('current_health')}
                                         className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
                                         +
                                     </button>
@@ -858,7 +963,7 @@ export default function CharacterDetails() {
                                             name="current_stamina"
                                             value={Math.round(editedCharStatus.current_stamina)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -869,22 +974,22 @@ export default function CharacterDetails() {
                                             name="max_stamina"
                                             value={Math.round(editedCharStatus.max_stamina)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <button
+                                    <button onClick={() => subtractCurrentStatus('current_stamina')}
                                         className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
                                         -
                                     </button>
                                     <Progress
-                                        value={(data.character.current_stamina / data.character.max_stamina) * 100}
+                                        value={(editedCharStatus.current_stamina / editedCharStatus.max_stamina) * 100}
                                         variant="stamina"
                                         indicatorVariant="stamina"
                                     />
-                                    <button
+                                    <button onClick={() => sumCurrentStatus('current_stamina')}
                                         className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
                                         +
                                     </button>
@@ -901,7 +1006,7 @@ export default function CharacterDetails() {
                                             name="current_mana"
                                             value={Math.round(editedCharStatus.current_mana)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -912,22 +1017,22 @@ export default function CharacterDetails() {
                                             name="max_mana"
                                             value={Math.round(editedCharStatus.max_mana)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <button
+                                    <button onClick={() => subtractCurrentStatus('current_mana')}
                                         className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
                                         -
                                     </button>
                                     <Progress
-                                        value={(data.character.current_mana / data.character.max_mana) * 100}
+                                        value={(editedCharStatus.current_mana / editedCharStatus.max_mana) * 100}
                                         variant="mana"
                                         indicatorVariant="mana"
                                     />
-                                    <button
+                                    <button onClick={() => sumCurrentStatus('current_mana')}
                                         className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
                                         +
                                     </button>
@@ -944,7 +1049,7 @@ export default function CharacterDetails() {
                                             name="current_sanity"
                                             value={Math.round(editedCharStatus.current_sanity)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                         <p className="font-md">
@@ -955,22 +1060,22 @@ export default function CharacterDetails() {
                                             name="max_sanity"
                                             value={Math.round(editedCharStatus.max_sanity)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <button
+                                    <button onClick={() => subtractCurrentStatus('current_sanity')}
                                         className="absolute left-4 top-1 transform -translate-x-1/2 text-white font-bold text-lg z-10">
                                         -
                                     </button>
                                     <Progress
-                                        value={(data.character.current_sanity / data.character.max_sanity) * 100}
+                                        value={(editedCharStatus.current_sanity / editedCharStatus.max_sanity) * 100}
                                         variant="sanity"
                                         indicatorVariant="sanity"
                                     />
-                                    <button
+                                    <button onClick={() => sumCurrentStatus('current_sanity')}
                                         className="absolute right-4 top-1 transform translate-x-1/2 text-white font-bold text-lg z-10">
                                         +
                                     </button>
@@ -982,7 +1087,7 @@ export default function CharacterDetails() {
                                 <div className="flex justify-between mb-1">
                                     <p className="font-bold">Dinheiro</p>
                                     <div className="flex items-center space-x-2">
-                                        <button
+                                        <button onClick={() => subtractCurrentStatus('money')}
                                             className="text-white font-bold text-lg bg-none p-0 outline-none">
                                             -
                                         </button>
@@ -991,10 +1096,10 @@ export default function CharacterDetails() {
                                             name="money"
                                             value={Math.round(editedCharStatus.money)}
                                             onChange={handleInputChangeCharStatus}
-                                            onBlur={updateCharacterStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
                                             className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
                                         />
-                                        <button
+                                        <button onClick={() => sumCurrentStatus('money')}
                                             className="text-white font-bold text-lg bg-none p-0 outline-none">
                                             +
                                         </button>
@@ -1003,34 +1108,112 @@ export default function CharacterDetails() {
                             </div>
                         </div>
                     </div>
+                    <div className="absolute bottom-20 flex space-x-4">
+                        <GiD4 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(4, 1)}/>
+                        <GiPerspectiveDiceSix className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(6, 1)}/>
+                        <GiDiceEightFacesEight className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(8, 1)}/>
+                        <GiD10 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(10, 1)}/>
+                        <GiD12 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(12, 1)}/>
+                        <GiDiceTwentyFacesTwenty className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(20, 1)}/>
+                    </div>
                 </div>
-                <div className='bg-tabuleiro2/35 p-4 pr-0 border-solid border-tabuleiro border-2 rounded-r-3xl '>
-                    <ScrollArea className='h-[480px] rounded-md pr-4'>
-                        <ul className="grid grid-cols-1 gap-3">
-                            {data?.attributes && data.attributes.length > 0 ? (
-                                data.attributes.map((attribute, index) => (
-                                    <li
-                                        key={index}
-                                        className="relative flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-20 w-24 hover:bg-tabuleiro2/15"
-                                        onClick={() => rollDice(attribute.dicenumber, attribute.value)}
-                                    >
-                                        <span className="text-2xl font-bold pb-1">
-                                            {attribute.value}
-                                        </span>
 
-                                        <div className='absolute bottom-1 bg-tabuleiro2 w-full -mb-2 rounded-b-lg text-center'>
-                                            <span className="font-bold text-sm ">{attribute.name}</span>
-                                        </div>
-                                    </li>
-                                ))
-                            ) : (
-                                <li>Nenhum atributo disponível</li>
-                            )}
-                            <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-full h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
-                                <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
-                            </div>
-                        </ul>
-                    </ScrollArea>
+                <div className='bg-tabuleiro2/35 p-4 pr-0 border-solid border-tabuleiro border-2 rounded-r-3xl '>
+                    {isEditChar ? (
+                        <ScrollArea className='h-[480px] w-[120px] rounded-md pr-4'>
+                            <ul className="grid grid-cols-1 gap-3">
+                                {data?.attributes && data.attributes.length > 0 ? (
+                                    data.attributes.map((attribute, index) => (
+                                        <li
+                                            key={index}
+                                            className="relative flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-20 w-24 hover:bg-tabuleiro2/15 group"
+                                        >
+                                            <div
+                                                className="absolute -top-2 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                onClick={() => handleEditAttributeClick(attribute)}
+                                            >
+                                                <TbPencil className="h-4 w-4 text-white" />
+                                            </div>
+                                            <div
+                                                className="absolute top-5 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                onClick={() => deleteAttribute(attribute.id)}
+                                            >
+                                                <FaRegTrashCan className="h-4 w-4 text-white" />
+                                            </div>
+                                            {editingAttributeIndex === attribute.id ? (
+                                                <>
+                                                    <input
+                                                        type="number"
+                                                        name="value"
+                                                        value={editedAttribute.value}
+                                                        onChange={handleInputChangeAttribute}
+                                                        className="bg-transparent border-2 border-tabuleiro text-md text-white text-center rounded-md w-full h-40 p-2"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        maxLength={12}
+                                                        value={editedAttribute.name}
+                                                        onChange={handleInputChangeAttribute}
+                                                        className="bg-transparent border-2 border-tabuleiro text-white text-center text-sm rounded-md w-full py-1 "
+                                                    />
+                                                    <div
+                                                        className="absolute bottom-0 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer"
+                                                        onClick={() => updateAttribute(attribute.id)}
+                                                    >
+                                                        <FaCheck className="h-4 w-4 text-white" />
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="text-2xl font-bold pb-1">
+                                                        {attribute.value}
+                                                    </span>
+
+                                                    <div className='absolute bottom-1 bg-tabuleiro2 w-full -mb-2 rounded-b-lg text-center'>
+                                                        <span className="font-bold text-sm ">{attribute.name}</span>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li>Nenhum atributo disponível</li>
+                                )}
+                                <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-full h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
+                                    <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
+                                </div>
+                            </ul>
+                        </ScrollArea>
+                    ) : (
+                        <ScrollArea className='h-[480px] rounded-md pr-4'>
+                            <ul className="grid grid-cols-1 gap-3">
+                                {data?.attributes && data.attributes.length > 0 ? (
+                                    data.attributes.map((attribute, index) => (
+                                        <li
+                                            key={index}
+                                            className="relative flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-20 w-24 hover:bg-tabuleiro2/15"
+                                            onClick={() => rollDice(attribute.dicenumber, attribute.value)}
+                                        >
+                                            <span className="text-2xl font-bold pb-1">
+                                                {attribute.value}
+                                            </span>
+
+                                            <div className='absolute bottom-1 bg-tabuleiro2 w-full -mb-2 rounded-b-lg text-center'>
+                                                <span className="font-bold text-sm ">{attribute.name}</span>
+                                            </div>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li>Nenhum atributo disponível</li>
+                                )}
+                                <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-full h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
+                                    <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
+                                </div>
+                            </ul>
+                        </ScrollArea>
+                    )}
+
                 </div>
 
                 <div className="flex flex-col p-4 gap-8 pt-28 pl-32">
@@ -1182,7 +1365,7 @@ export default function CharacterDetails() {
 
                 </div>
 
-            </div>
+            </div >
             <div className="flex flex-col ml-48 mr-48">
                 <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Inventário</h1>
                 <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
@@ -1236,7 +1419,7 @@ export default function CharacterDetails() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 
 }

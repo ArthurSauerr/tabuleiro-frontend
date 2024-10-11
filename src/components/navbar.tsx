@@ -79,9 +79,9 @@ const Navbar = () => {
         <li>
           <Link href="/characters" className="text-sm font-bold hover:underline">Fichas</Link>
         </li>
-        <li>
+        {/* <li>
           <Link href="/dice" className="text-sm font-bold hover:underline">Rolagens</Link>
-        </li>
+        </li> */}
       </ul>
       <div className="pr-10">
         {authenticated ? (
