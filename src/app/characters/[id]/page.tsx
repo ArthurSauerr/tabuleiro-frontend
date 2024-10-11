@@ -40,61 +40,61 @@ const poppins = Poppins({
 
 interface Character {
     id: number;
-    name: string;            // Nome do personagem
-    age: number | null;      // Idade do personagem
-    char_class: string;      // Classe do personagem
-    char_subclass: string;   // Subclasse do personagem
-    nacionality: string;     // Nacionalidade do personagem
-    max_health: number;      // Saúde máxima
-    current_health: number;  // Saúde atual
-    max_stamina: number;     // Estamina máxima
-    current_stamina: number; // Estamina atual
-    max_mana: number;        // Mana máxima
-    current_mana: number;    // Mana atual
-    money: number;           // Dinheiro
+    name: string;
+    age: number | null;
+    char_class: string;
+    char_subclass: string;
+    nacionality: string;
+    max_health: number;
+    current_health: number;
+    max_stamina: number;
+    current_stamina: number;
+    max_mana: number;
+    current_mana: number;
+    money: number;
 }
 
 
 interface Attribute {
     dicenumber: number;
     id: number | null;
-    name: string;       // Nome do atributo
-    value: number;      // Valor do atributo
-    char_id: number;    // ID do personagem
+    name: string;
+    value: number;
+    char_id: number;
 }
 
 interface Spell {
     id: number;
-    name: string;        // Nome do feitiço
-    description: string; // Descrição do feitiço
-    cost: number;        // Custo do feitiço
-    cost_type: string;   // Tipo de custo (ex: Mana)
-    diceNumber: number;  // Número de lados do dado
-    diceQtd: number;     // Quantidade de dados
-    char_id: number;     // ID do personagem
+    name: string;
+    description: string;
+    cost: number;
+    cost_type: string;
+    dicenumber: number;
+    diceqtd: number;
+    char_id: number; 
 }
 
 
 interface Ability {
     id: number;
-    name: string;        // Nome da habilidade
-    description: string; // Descrição da habilidade
-    char_id: number;     // ID do personagem
+    name: string;
+    description: string; 
+    char_id: number;  
 }
 
 
 interface InventoryItem {
     id: number;
-    item: string;       // Nome do item
-    quantity: number;   // Quantidade do item
-    weight: number;     // Peso do item
-    diceNumber: number; // Número de lados do dado
-    diceQtd: number;    // Quantidade de dados
-    char_id: number;    // ID do personagem
+    item: string; 
+    quantity: number; 
+    weight: number;  
+    dicenumber: number; 
+    diceqtd: number; 
+    char_id: number;   
 }
 
 interface CharacterData {
-    character: Character; // O tipo Character deve ter id como number
+    character: Character; 
     inventory?: InventoryItem[];
     abilities?: Ability[];
     attributes?: Attribute[];
@@ -125,12 +125,12 @@ export default function CharacterDetails() {
     const [name, setName] = useState<string | null>(null);
     const [description, setDescription] = useState<string | null>(null);
     const [costType, setCostType] = useState<string | null>(null);
-    const [cost, setCost] = useState<number | null>(null); // agora pode ser null
-    const [diceQtd, setDiceQtd] = useState<number | null>(null); // agora pode ser null
-    const [diceNumber, setDiceNumber] = useState<number | null>(null); // agora pode ser null
-    const [quantity, setQuantity] = useState<number | null>(null); // agora pode ser null
-    const [weight, setWeight] = useState<number | null>(null); // agora pode ser null
-    const [value, setValue] = useState<number | null>(null); // agora pode ser null
+    const [cost, setCost] = useState<number | null>(null); 
+    const [diceQtd, setDiceQtd] = useState<number | null>(null);
+    const [diceNumber, setDiceNumber] = useState<number | null>(null);
+    const [quantity, setQuantity] = useState<number | null>(null); 
+    const [weight, setWeight] = useState<number | null>(null); 
+    const [value, setValue] = useState<number | null>(null); 
 
     const [item_id, setItem_id] = useState<number | null>(null);
     const [abl_id, setAbl_id] = useState<number | null>(null);
@@ -283,17 +283,17 @@ export default function CharacterDetails() {
         if (isEditChar) {
             setIsEditChar(false);
         } else {
-            if (character) { // Verifique se 'character' não é undefined
+            if (character) { 
                 setIsEditChar(true);
                 setEditedChar({
                     name: character.name,
-                    age: character.age !== null ? character.age : 0, // Atribuir 0 se age for null
+                    age: character.age !== null ? character.age : 0,
                     nacionality: character.nacionality,
                     class: character.char_class,
                     sub_class: character.char_subclass,
                 });
             } else {
-                console.error("Character is undefined"); // Opcional: log de erro ou mensagem
+                console.error("Character is undefined"); 
             }
         }
     };
@@ -404,7 +404,7 @@ export default function CharacterDetails() {
                         },
                     };
                 }
-                return null; // ou retorne um estado padrão, se necessário
+                return null;
             });
         } catch (error: AxiosError | any) {
             console.error('Erro ao atualizar os dados: ', error);
@@ -432,7 +432,6 @@ export default function CharacterDetails() {
             console.log(response.data);
 
             setCharacterData((prevData) => {
-                // Verifica se prevData não é null antes de acessar suas propriedades
                 if (prevData) {
                     return {
                         ...prevData,
@@ -442,7 +441,7 @@ export default function CharacterDetails() {
                         },
                     };
                 }
-                return null; // Ou retorne um estado padrão, se necessário
+                return null;
             });
 
             setIsEditChar(false);
@@ -685,16 +684,12 @@ export default function CharacterDetails() {
         }
     };
 
-    if (loading) {
+    if (loading || !data) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <div className="w-16 h-16 border-4 border-tabuleiro2 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
-    }
-
-    if (!data) {
-        return <div>Loading...</div>; // ou um componente de loading ou mensagem de erro
     }
 
     return (
@@ -750,13 +745,13 @@ export default function CharacterDetails() {
                                             <option value="Mana">Mana</option>
                                             <option value="Sanidade">Sanidade</option>
                                         </select>
-                                        <Input type="number" placeholder="Custo" className='w-1/3 text-center border-tabuleiro border-2' value={cost ?? 0} onChange={(e) => setCost(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Custo" className='w-1/3 text-center border-tabuleiro border-2' value={cost ?? ''} onChange={(e) => setCost(Number(e.target.value))} />
                                     </div>
 
                                     <div className='flex justify-center items-center'>
-                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd ?? 0} onChange={(e) => setDiceQtd(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd ?? ''} onChange={(e) => setDiceQtd(Number(e.target.value))} />
                                         <p className='text-xl mr-7 ml-7 text-tabuleiro2 font-bold'>d</p>
-                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber ?? 0} onChange={(e) => setDiceNumber(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber ?? ''} onChange={(e) => setDiceNumber(Number(e.target.value))} />
                                     </div>
 
                                     <Textarea className='w-1/2 border-tabuleiro border-2' placeholder="Solta uma enorme bola de fogo, causando 3d12 de dano na área." value={description ?? ''} onChange={(e) => setDescription(e.target.value)} />
@@ -813,7 +808,7 @@ export default function CharacterDetails() {
                                         type="number"
                                         placeholder="Valor"
                                         className='w-1/2 text-center border-tabuleiro border-2'
-                                        value={value ?? 0} // se value for null, usa 0
+                                        value={value ?? ''}
                                         onChange={(e) => setValue(Number(e.target.value))}
                                     />
                                     <div className='flex justify-center items-center'>
@@ -823,7 +818,7 @@ export default function CharacterDetails() {
                                             type="number"
                                             placeholder="Dado"
                                             className=' text-center border-tabuleiro border-2'
-                                            value={diceNumber ?? 1} // se diceNumber for null, usa 1
+                                            value={diceNumber ?? ''}
                                             onChange={(e) => setDiceNumber(Number(e.target.value))}
                                         />
                                     </div>
@@ -850,13 +845,44 @@ export default function CharacterDetails() {
                         <AlertDialogDescription className='text-white font-md text-center'>
                             <div className='space-y-2'>
                                 <div className='flex flex-col gap-4 mt-4 items-center'>
-                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={12} value={name ?? ''} onChange={(e) => setName(e.target.value)} />
-                                    <Input type="number" placeholder="Quantidade" className='w-1/2 text-center border-tabuleiro border-2' value={quantity ?? 0} onChange={(e) => setQuantity(Number(e.target.value))} />
-                                    <Input type="number" placeholder="Peso do Item" className='w-1/2 text-center border-tabuleiro border-2' value={weight ?? 0} onChange={(e) => setWeight(Number(e.target.value))} />
+                                    <Input
+                                        type="text"
+                                        placeholder="Nome"
+                                        className='w-1/2 border-tabuleiro border-2'
+                                        maxLength={12}
+                                        value={name ?? ''}
+                                        onChange={(e) => setName(e.target.value)}
+                                    />
+                                    <Input
+                                        type="number"
+                                        placeholder="Quantidade"
+                                        className='w-1/2 text-center border-tabuleiro border-2'
+                                        value={quantity ?? ''}
+                                        onChange={(e) => setQuantity(e.target.value ? Number(e.target.value) : null)}
+                                    />
+                                    <Input
+                                        type="number"
+                                        placeholder="Peso do Item"
+                                        className='w-1/2 text-center border-tabuleiro border-2'
+                                        value={weight ?? ''}
+                                        onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : null)}
+                                    />
                                     <div className='flex justify-center items-center'>
-                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd ?? 0} onChange={(e) => setDiceQtd(Number(e.target.value))} />
+                                        <Input
+                                            type="number"
+                                            placeholder="Qtd"
+                                            className='w-1/5 text-center border-tabuleiro border-2'
+                                            value={diceQtd ?? ''}
+                                            onChange={(e) => setDiceQtd(e.target.value ? Number(e.target.value) : null)}
+                                        />
                                         <p className='text-xl mr-7 ml-7 text-tabuleiro2 font-bold'>d</p>
-                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber ?? 0} onChange={(e) => setDiceNumber(Number(e.target.value))} />
+                                        <Input
+                                            type="number"
+                                            placeholder="Dado"
+                                            className='w-1/5 text-center border-tabuleiro border-2'
+                                            value={diceNumber ?? ''}
+                                            onChange={(e) => setDiceNumber(e.target.value ? Number(e.target.value) : null)}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -872,6 +898,7 @@ export default function CharacterDetails() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
 
             {/* Modal excluir item */}
             <AlertDialog open={isDialogDeleteItemOpen} onOpenChange={setIsDialogDeleteItemOpen}>
@@ -1354,7 +1381,7 @@ export default function CharacterDetails() {
                                                                 <div className='flex justify-between pt-14'>
                                                                     <p className="text-md font-bold mr-9 p-1">Dano</p>
                                                                     <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
-                                                                        {spells.diceQtd}d{spells.diceNumber}
+                                                                        {spells.diceqtd}d{spells.dicenumber}
                                                                     </p>
                                                                 </div>
                                                                 <div className='flex justify-between'>
@@ -1362,19 +1389,19 @@ export default function CharacterDetails() {
                                                                     <p className={`text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 rounded-md shadow-md shadow-black/50 mb-6 ${getCostBackgroundClass(spells.cost_type)}`}> {spells.cost} </p>
                                                                 </div>
                                                             </div>
-                                                            <Button onClick={() => rollDice(spells.diceNumber, spells.diceQtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
+                                                            <Button onClick={() => rollDice(spells.dicenumber, spells.diceqtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
                                                         </div>
 
                                                         {/* Parte de trás da carta */}
                                                         <div className="card-back flex flex-col items-center justify-center bg-tabuleiro rounded-lg h-full border border-2 border-tabuleiro2">
-                                                            {spells.id !== null && (
-                                                                <div
-                                                                    className="absolute top-5 -right-2 z-20 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
-                                                                    onClick={() => handleDeleteSpellClick(spells.id)}
-                                                                >
-                                                                    <FaRegTrashCan className="h-4 w-4 text-white" />
-                                                                </div>
-                                                            )}
+
+                                                            <div
+                                                                className="absolute top-5 -right-2 z-20 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                onClick={() => handleDeleteSpellClick(spells.id)}
+                                                            >
+                                                                <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                            </div>
+
                                                             <p className="text-white text-xs font-md text-center p-2">{spells.description}</p>
                                                             <div className=''>
                                                                 <Image
@@ -1503,11 +1530,11 @@ export default function CharacterDetails() {
                                             <p className="font-bold text-md pt-1">{inventory.item}</p>
                                         </div>
                                         <div className='flex flex-col gap-5'>
-                                            {inventory.diceQtd && inventory.diceNumber && (
+                                            {inventory.diceqtd && inventory.dicenumber && (
                                                 <div className='flex justify-between pt-14'>
                                                     <p className="text-md font-bold mr-9 p-1">Dano</p>
                                                     <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
-                                                        {inventory.diceQtd}d{inventory.diceNumber}
+                                                        {inventory.diceqtd}d{inventory.dicenumber}
                                                     </p>
                                                 </div>
                                             )}

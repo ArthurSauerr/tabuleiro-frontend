@@ -80,9 +80,9 @@ const Navbar = () => {
         <li>
           <Link href="/characters" className="text-sm font-bold hover:underline">Fichas</Link>
         </li>
-        {/* <li>
-          <Link href="/dice" className="text-sm font-bold hover:underline">Rolagens</Link>
-        </li> */}
+        <li>
+          <Link href="/credits" className="text-sm font-bold hover:underline">Créditos</Link>
+        </li>
       </ul>
       <div className="pr-10">
         {authenticated ? (
