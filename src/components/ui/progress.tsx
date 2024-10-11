@@ -37,10 +37,7 @@ const indicatorVariants = cva(
         mana: "bg-manaBar",
         sanity: "bg-sanityBar",
       }, 
-    },
-    defaultVariants: {
-      variant: "default",
-    },
+    }
   }
 )
 
@@ -48,7 +45,7 @@ const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & 
   VariantProps<typeof progressVariants> & 
-  VariantProps<typeof indicatorVariants>
+  VariantProps<typeof indicatorVariants> & { indicatorVariant?: 'health' | 'stamina' | 'mana' | 'sanity' | 'tabuleiro' }
 >(({ className, value, variant, indicatorVariant, ...props }, ref) => (
   <ProgressPrimitive.Root
     ref={ref}
@@ -60,7 +57,7 @@ const Progress = React.forwardRef<
       style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
     />
   </ProgressPrimitive.Root>
-))
+));
 Progress.displayName = ProgressPrimitive.Root.displayName
 
 export { Progress }

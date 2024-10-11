@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
-import { useEffect, useState } from 'react';
-import axios, { Axios, AxiosError, AxiosResponse } from 'axios';
+import { SetStateAction, useEffect, useState } from 'react';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import Navbar from '@/components/navbar';
 import { useParams } from 'next/navigation';
 import { Poppins } from 'next/font/google';
@@ -11,18 +12,16 @@ import { IoSearchSharp } from "react-icons/io5";
 import {
     AlertDialog,
     AlertDialogAction,
-    AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
-import { FaC, FaRegTrashCan } from "react-icons/fa6";
+import { FaRegTrashCan } from "react-icons/fa6";
 import { TbPencil } from "react-icons/tb";
 import { FaCheck } from "react-icons/fa";
 import { GiD4 } from "react-icons/gi";
@@ -39,9 +38,73 @@ const poppins = Poppins({
     weight: ['300', '400', '700'],
 });
 
+interface Character {
+    id: number;
+    name: string;            // Nome do personagem
+    age: number | null;      // Idade do personagem
+    char_class: string;      // Classe do personagem
+    char_subclass: string;   // Subclasse do personagem
+    nacionality: string;     // Nacionalidade do personagem
+    max_health: number;      // Saúde máxima
+    current_health: number;  // Saúde atual
+    max_stamina: number;     // Estamina máxima
+    current_stamina: number; // Estamina atual
+    max_mana: number;        // Mana máxima
+    current_mana: number;    // Mana atual
+    money: number;           // Dinheiro
+}
+
+
+interface Attribute {
+    dicenumber: number;
+    id: number | null;
+    name: string;       // Nome do atributo
+    value: number;      // Valor do atributo
+    char_id: number;    // ID do personagem
+}
+
+interface Spell {
+    id: number;
+    name: string;        // Nome do feitiço
+    description: string; // Descrição do feitiço
+    cost: number;        // Custo do feitiço
+    cost_type: string;   // Tipo de custo (ex: Mana)
+    diceNumber: number;  // Número de lados do dado
+    diceQtd: number;     // Quantidade de dados
+    char_id: number;     // ID do personagem
+}
+
+
+interface Ability {
+    id: number;
+    name: string;        // Nome da habilidade
+    description: string; // Descrição da habilidade
+    char_id: number;     // ID do personagem
+}
+
+
+interface InventoryItem {
+    id: number;
+    item: string;       // Nome do item
+    quantity: number;   // Quantidade do item
+    weight: number;     // Peso do item
+    diceNumber: number; // Número de lados do dado
+    diceQtd: number;    // Quantidade de dados
+    char_id: number;    // ID do personagem
+}
+
+interface CharacterData {
+    character: Character; // O tipo Character deve ter id como number
+    inventory?: InventoryItem[];
+    abilities?: Ability[];
+    attributes?: Attribute[];
+    spells?: Spell[];
+}
+
+
 export default function CharacterDetails() {
     const { id } = useParams();
-    const [data, setCharacterData] = useState(null);
+    const [data, setCharacterData] = useState<CharacterData | null>(null);
     const [loading, setLoading] = useState(true);
     const totalWeight = data?.inventory?.reduce((acc, item) => acc + Number(item.weight), 0);
 
@@ -59,19 +122,20 @@ export default function CharacterDetails() {
     const [isDialogDeleteAbilityOpen, setIsDialogDeleteAbilityOpen] = useState(false);
     const [isDialogDeleteSpellOpen, setIsDialogDeleteSpellOpen] = useState(false);
 
-    const [name, setName] = useState("");
-    const [description, setDescription] = useState("");
-    const [cost, setCost] = useState(null);
-    const [costType, setCostType] = useState("");
-    const [diceNumber, setDiceNumber] = useState(null);
-    const [diceQtd, setDiceQtd] = useState(null);
-    const [quantity, setQuantity] = useState(null);
-    const [weight, setWeight] = useState(null);
-    const [value, setValue] = useState(null);
+    const [name, setName] = useState<string | null>(null);
+    const [description, setDescription] = useState<string | null>(null);
+    const [costType, setCostType] = useState<string | null>(null);
+    const [cost, setCost] = useState<number | null>(null); // agora pode ser null
+    const [diceQtd, setDiceQtd] = useState<number | null>(null); // agora pode ser null
+    const [diceNumber, setDiceNumber] = useState<number | null>(null); // agora pode ser null
+    const [quantity, setQuantity] = useState<number | null>(null); // agora pode ser null
+    const [weight, setWeight] = useState<number | null>(null); // agora pode ser null
+    const [value, setValue] = useState<number | null>(null); // agora pode ser null
 
-    const [item_id, setItem_id] = useState(null);
-    const [abl_id, setAbl_id] = useState(null);
-    const [spell_id, setSpell_id] = useState(null);
+    const [item_id, setItem_id] = useState<number | null>(null);
+    const [abl_id, setAbl_id] = useState<number | null>(null);
+    const [spell_id, setSpell_id] = useState<number>(0);
+
 
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -94,7 +158,9 @@ export default function CharacterDetails() {
     const [editedAttribute, setEditedAttribute] = useState({ name: '', value: 0 });
 
     const [isEditChar, setIsEditChar] = useState(false);
-    const [editedChar, setEditedChar] = useState({ name: '', age: null, class: '', sub_class: '', nacionality: '' });
+    const [editedChar, setEditedChar] = useState({ name: '', age: 0, class: '', sub_class: '', nacionality: '' });
+
+    type StatusKey = 'current_health' | 'max_health' | 'current_stamina' | 'max_stamina' | 'current_mana' | 'max_mana' | 'current_sanity' | 'max_sanity' | 'money';
 
 
     const clearFormFields = () => {
@@ -113,17 +179,17 @@ export default function CharacterDetails() {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    const handleDeleteItemClick = (item_id) => {
+    const handleDeleteItemClick = (item_id: number) => {
         setItem_id(item_id);
         setIsDialogDeleteItemOpen(true);
     };
 
-    const handleDeleteAbilityClick = (abl_id) => {
+    const handleDeleteAbilityClick = (abl_id: number) => {
         setAbl_id(abl_id);
         setIsDialogDeleteAbilityOpen(true);
     };
 
-    const handleDeleteSpellClick = (spell_id) => {
+    const handleDeleteSpellClick = (spell_id: number) => {
         setSpell_id(spell_id);
         setIsDialogDeleteSpellOpen(true);
     };
@@ -189,7 +255,7 @@ export default function CharacterDetails() {
         }
     };
 
-    const handleEditAbilityClick = (ability) => {
+    const handleEditAbilityClick = (ability: Ability) => {
         if (editingAbilityIndex === ability.id) {
             setEditingAbilityIndex(null);
         } else {
@@ -201,7 +267,7 @@ export default function CharacterDetails() {
         }
     };
 
-    const handleEditAttributeClick = (attribute) => {
+    const handleEditAttributeClick = (attribute: Attribute) => {
         if (editingAttributeIndex === attribute.id) {
             setEditingAttributeIndex(null);
         } else {
@@ -213,22 +279,26 @@ export default function CharacterDetails() {
         }
     };
 
-    const handleEditCharClick = (character) => {
+    const handleEditCharClick = (character: Character | undefined) => {
         if (isEditChar) {
             setIsEditChar(false);
         } else {
-            setIsEditChar(true);
-            setEditedChar({
-                name: character.name,
-                age: character.age,
-                nacionality: character.nacionality,
-                class: character.char_class,
-                sub_class: character.char_subclass,
-            });
+            if (character) { // Verifique se 'character' não é undefined
+                setIsEditChar(true);
+                setEditedChar({
+                    name: character.name,
+                    age: character.age !== null ? character.age : 0, // Atribuir 0 se age for null
+                    nacionality: character.nacionality,
+                    class: character.char_class,
+                    sub_class: character.char_subclass,
+                });
+            } else {
+                console.error("Character is undefined"); // Opcional: log de erro ou mensagem
+            }
         }
-    }
+    };
 
-    const handleInputChangeChar = (e) => {
+    const handleInputChangeChar = (e: { target: { name: any; value: any; }; }) => {
         if (e && e.target) {
             const { name, value } = e.target;
             setEditedChar((prev) => ({
@@ -238,7 +308,7 @@ export default function CharacterDetails() {
         }
     };
 
-    const handleInputChangeCharStatus = (e) => {
+    const handleInputChangeCharStatus = (e: { target: { name: any; value: any; }; }) => {
         if (e && e.target) {
             const { name, value } = e.target;
             setEditedCharStatus((prev) => ({
@@ -248,7 +318,7 @@ export default function CharacterDetails() {
         }
     };
 
-    const handleInputChangeAbility = (e) => {
+    const handleInputChangeAbility = (e: { target: { name: any; value: any; }; }) => {
         if (e && e.target) {
             const { name, value } = e.target;
             setEditedAbility((prev) => ({
@@ -258,7 +328,7 @@ export default function CharacterDetails() {
         }
     };
 
-    const handleInputChangeAttribute = (e) => {
+    const handleInputChangeAttribute = (e: { target: { name: any; value: any; }; }) => {
         if (e && e.target) {
             const { name, value } = e.target;
             setEditedAttribute((prev) => ({
@@ -268,11 +338,11 @@ export default function CharacterDetails() {
         }
     };
 
-    const subtractCurrentStatus = (statusKey) => {
+    const subtractCurrentStatus = (statusKey: StatusKey) => {
         setEditedCharStatus((prevStatus) => {
             const newStatus = {
                 ...prevStatus,
-                [statusKey]: Math.max((prevStatus[statusKey] || 0) - 10, 0)
+                [statusKey]: Math.max((prevStatus[statusKey] || 0) - 10, 0),
             };
 
             updateCharacterStatus(newStatus);
@@ -280,11 +350,11 @@ export default function CharacterDetails() {
         });
     };
 
-    const sumCurrentStatus = (statusKey) => {
+    const sumCurrentStatus = (statusKey: StatusKey) => {
         setEditedCharStatus((prevStatus) => {
             const newStatus = {
                 ...prevStatus,
-                [statusKey]: parseFloat(prevStatus[statusKey] || 0) + 10
+                [statusKey]: parseFloat((prevStatus[statusKey] ?? '0').toString()) + 10
             };
 
             updateCharacterStatus(newStatus);
@@ -292,7 +362,17 @@ export default function CharacterDetails() {
         });
     };
 
-    const updateCharacterStatus = async (updatedStatus) => {
+    const updateCharacterStatus = async (updatedStatus: {
+        current_health: number;
+        max_health: number;
+        current_stamina: number;
+        max_stamina: number;
+        current_mana: number;
+        max_mana: number;
+        current_sanity: number;
+        max_sanity: number;
+        money: number;
+    }) => {
         const updatedCharacterData = {
             current_health: updatedStatus.current_health,
             max_health: updatedStatus.max_health,
@@ -314,17 +394,23 @@ export default function CharacterDetails() {
                 }
             );
             console.log(response.data);
-            setCharacterData((prevState) => ({
-                ...prevState,
-                character: {
-                    ...prevState.character,
-                    ...updatedCharacterData,
-                },
-            }));
+            setCharacterData((prevState) => {
+                if (prevState) {
+                    return {
+                        ...prevState,
+                        character: {
+                            ...prevState.character,
+                            ...updatedCharacterData,
+                        },
+                    };
+                }
+                return null; // ou retorne um estado padrão, se necessário
+            });
         } catch (error: AxiosError | any) {
             console.error('Erro ao atualizar os dados: ', error);
         }
     };
+
 
     const updateCharacterBio = async () => {
         const updatedCharacterData = {
@@ -344,18 +430,27 @@ export default function CharacterDetails() {
                 }
             );
             console.log(response.data);
-            setCharacterData((prevData) => ({
-                ...prevData,
-                character: {
-                    ...prevData.character,
-                    ...updatedCharacterData,
-                },
-            }));
+
+            setCharacterData((prevData) => {
+                // Verifica se prevData não é null antes de acessar suas propriedades
+                if (prevData) {
+                    return {
+                        ...prevData,
+                        character: {
+                            ...prevData.character,
+                            ...updatedCharacterData,
+                        },
+                    };
+                }
+                return null; // Ou retorne um estado padrão, se necessário
+            });
+
             setIsEditChar(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao atualizar os dados: ', error);
         }
     };
+
 
     const createSpell = async () => {
         const spellData = {
@@ -517,7 +612,7 @@ export default function CharacterDetails() {
         }
     };
 
-    const deleteAttribute = async (atr_id) => {
+    const deleteAttribute = async (atr_id: number | null) => {
         try {
             await axios.delete(`https://tabuleiro-backend.onrender.com/attributes/delete/${id}/${atr_id}`, {
                 withCredentials: true,
@@ -575,7 +670,7 @@ export default function CharacterDetails() {
         }
     };
 
-    const getCostBackgroundClass = (costType) => {
+    const getCostBackgroundClass = (costType: string) => {
         switch (costType) {
             case 'Mana':
                 return 'bg-manaBar outline outline-2 outline-[#718CAC]';
@@ -596,6 +691,10 @@ export default function CharacterDetails() {
                 <div className="w-16 h-16 border-4 border-tabuleiro2 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
+    }
+
+    if (!data) {
+        return <div>Loading...</div>; // ou um componente de loading ou mensagem de erro
     }
 
     return (
@@ -641,26 +740,26 @@ export default function CharacterDetails() {
                         <AlertDialogDescription className='text-white font-md text-center'>
                             <div className='space-y-2'>
                                 <div className='flex flex-col gap-4 mt-4 items-center'>
-                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={14} value={name} onChange={(e) => setName(e.target.value)} />
+                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={14} value={name ?? ''} onChange={(e) => setName(e.target.value)} />
 
                                     <div className='flex items-center gap-2 w-1/2'>
-                                        <select className='flex-1 p-2 bg-tabuleiro text-white rounded-md' value={costType} onChange={(e) => setCostType(e.target.value)}>
+                                        <select className='flex-1 p-2 bg-tabuleiro text-white rounded-md' value={costType ?? ''} onChange={(e) => setCostType(e.target.value)}>
                                             <option value="" disabled>Status a ser gasto</option>
                                             <option value="Vida">Vida</option>
                                             <option value="Stamina">Stamina</option>
                                             <option value="Mana">Mana</option>
                                             <option value="Sanidade">Sanidade</option>
                                         </select>
-                                        <Input type="number" placeholder="Custo" className='w-1/3 text-center border-tabuleiro border-2' value={cost} onChange={(e) => setCost(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Custo" className='w-1/3 text-center border-tabuleiro border-2' value={cost ?? 0} onChange={(e) => setCost(Number(e.target.value))} />
                                     </div>
 
                                     <div className='flex justify-center items-center'>
-                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd} onChange={(e) => setDiceQtd(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd ?? 0} onChange={(e) => setDiceQtd(Number(e.target.value))} />
                                         <p className='text-xl mr-7 ml-7 text-tabuleiro2 font-bold'>d</p>
-                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber} onChange={(e) => setDiceNumber(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber ?? 0} onChange={(e) => setDiceNumber(Number(e.target.value))} />
                                     </div>
 
-                                    <Textarea className='w-1/2 border-tabuleiro border-2' placeholder="Solta uma enorme bola de fogo, causando 3d12 de dano na área." value={description} onChange={(e) => setDescription(e.target.value)} />
+                                    <Textarea className='w-1/2 border-tabuleiro border-2' placeholder="Solta uma enorme bola de fogo, causando 3d12 de dano na área." value={description ?? ''} onChange={(e) => setDescription(e.target.value)} />
                                 </div>
                             </div>
                         </AlertDialogDescription>
@@ -684,8 +783,8 @@ export default function CharacterDetails() {
                         <AlertDialogDescription className='text-white font-md text-center'>
                             <div className='space-y-2'>
                                 <div className='flex flex-col gap-4 mt-4 items-center'>
-                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={14} value={name} onChange={(e) => setName(e.target.value)} />
-                                    <Textarea className='w-1/2 border-tabuleiro border-2' placeholder="Solta uma enorme bola de fogo, causando 3d12 de dano na área." value={description} onChange={(e) => setDescription(e.target.value)} />
+                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={14} value={name ?? ''} onChange={(e) => setName(e.target.value)} />
+                                    <Textarea className='w-1/2 border-tabuleiro border-2' placeholder="Solta uma enorme bola de fogo, causando 3d12 de dano na área." value={description ?? ''} onChange={(e) => setDescription(e.target.value)} />
                                 </div>
                             </div>
                         </AlertDialogDescription>
@@ -709,12 +808,24 @@ export default function CharacterDetails() {
                         <AlertDialogDescription className='text-white font-md text-center'>
                             <div className='space-y-2'>
                                 <div className='flex flex-col gap-4 mt-4 items-center'>
-                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={12} value={name} onChange={(e) => setName(e.target.value)} />
-                                    <Input type="number" placeholder="Valor" className='w-1/2 text-center border-tabuleiro border-2' value={value} onChange={(e) => setValue(Number(e.target.value))} />
+                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={12} value={name ?? ''} onChange={(e) => setName(e.target.value)} />
+                                    <Input
+                                        type="number"
+                                        placeholder="Valor"
+                                        className='w-1/2 text-center border-tabuleiro border-2'
+                                        value={value ?? 0} // se value for null, usa 0
+                                        onChange={(e) => setValue(Number(e.target.value))}
+                                    />
                                     <div className='flex justify-center items-center'>
                                         <p className='text-xl font-bold text-tabuleiro2'>{value}</p>
                                         <p className='text-xl mr-4 ml-3 text-tabuleiro2 font-bold'>d</p>
-                                        <Input type="number" placeholder="Dado" className=' text-center border-tabuleiro border-2' value={diceNumber} onChange={(e) => setDiceNumber(Number(e.target.value))} />
+                                        <Input
+                                            type="number"
+                                            placeholder="Dado"
+                                            className=' text-center border-tabuleiro border-2'
+                                            value={diceNumber ?? 1} // se diceNumber for null, usa 1
+                                            onChange={(e) => setDiceNumber(Number(e.target.value))}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -739,13 +850,13 @@ export default function CharacterDetails() {
                         <AlertDialogDescription className='text-white font-md text-center'>
                             <div className='space-y-2'>
                                 <div className='flex flex-col gap-4 mt-4 items-center'>
-                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={12} value={name} onChange={(e) => setName(e.target.value)} />
-                                    <Input type="number" placeholder="Quantidade" className='w-1/2 text-center border-tabuleiro border-2' value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
-                                    <Input type="number" placeholder="Peso do Item" className='w-1/2 text-center border-tabuleiro border-2' value={weight} onChange={(e) => setWeight(Number(e.target.value))} />
+                                    <Input type="text" placeholder="Nome" className='w-1/2 border-tabuleiro border-2' maxLength={12} value={name ?? ''} onChange={(e) => setName(e.target.value)} />
+                                    <Input type="number" placeholder="Quantidade" className='w-1/2 text-center border-tabuleiro border-2' value={quantity ?? 0} onChange={(e) => setQuantity(Number(e.target.value))} />
+                                    <Input type="number" placeholder="Peso do Item" className='w-1/2 text-center border-tabuleiro border-2' value={weight ?? 0} onChange={(e) => setWeight(Number(e.target.value))} />
                                     <div className='flex justify-center items-center'>
-                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd} onChange={(e) => setDiceQtd(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Qtd" className='w-1/5 text-center border-tabuleiro border-2' value={diceQtd ?? 0} onChange={(e) => setDiceQtd(Number(e.target.value))} />
                                         <p className='text-xl mr-7 ml-7 text-tabuleiro2 font-bold'>d</p>
-                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber} onChange={(e) => setDiceNumber(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Dado" className='w-1/5 text-center border-tabuleiro border-2' value={diceNumber ?? 0} onChange={(e) => setDiceNumber(Number(e.target.value))} />
                                     </div>
                                 </div>
                             </div>
@@ -838,6 +949,7 @@ export default function CharacterDetails() {
             </AlertDialog>
 
             <Navbar />
+
             <div className="relative flex items-center h-screen p-4">
                 <div className="flex flex-col ml-24 pb-12">
                     <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">{data.character.name}</h1>
@@ -1109,12 +1221,12 @@ export default function CharacterDetails() {
                         </div>
                     </div>
                     <div className="absolute bottom-20 flex space-x-4">
-                        <GiD4 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(4, 1)}/>
-                        <GiPerspectiveDiceSix className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(6, 1)}/>
-                        <GiDiceEightFacesEight className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(8, 1)}/>
-                        <GiD10 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(10, 1)}/>
-                        <GiD12 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(12, 1)}/>
-                        <GiDiceTwentyFacesTwenty className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(20, 1)}/>
+                        <GiD4 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(4, 1)} />
+                        <GiPerspectiveDiceSix className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(6, 1)} />
+                        <GiDiceEightFacesEight className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(8, 1)} />
+                        <GiD10 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(10, 1)} />
+                        <GiD12 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(12, 1)} />
+                        <GiDiceTwentyFacesTwenty className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(20, 1)} />
                     </div>
                 </div>
 
@@ -1159,7 +1271,7 @@ export default function CharacterDetails() {
                                                     />
                                                     <div
                                                         className="absolute bottom-0 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer"
-                                                        onClick={() => updateAttribute(attribute.id)}
+                                                        onClick={() => updateAttribute()}
                                                     >
                                                         <FaCheck className="h-4 w-4 text-white" />
                                                     </div>
@@ -1242,7 +1354,7 @@ export default function CharacterDetails() {
                                                                 <div className='flex justify-between pt-14'>
                                                                     <p className="text-md font-bold mr-9 p-1">Dano</p>
                                                                     <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
-                                                                        {spells.diceqtd}d{spells.dicenumber}
+                                                                        {spells.diceQtd}d{spells.diceNumber}
                                                                     </p>
                                                                 </div>
                                                                 <div className='flex justify-between'>
@@ -1250,17 +1362,19 @@ export default function CharacterDetails() {
                                                                     <p className={`text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 rounded-md shadow-md shadow-black/50 mb-6 ${getCostBackgroundClass(spells.cost_type)}`}> {spells.cost} </p>
                                                                 </div>
                                                             </div>
-                                                            <Button onClick={() => rollDice(spells.dicenumber, spells.diceqtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
+                                                            <Button onClick={() => rollDice(spells.diceNumber, spells.diceQtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
                                                         </div>
 
                                                         {/* Parte de trás da carta */}
                                                         <div className="card-back flex flex-col items-center justify-center bg-tabuleiro rounded-lg h-full border border-2 border-tabuleiro2">
-                                                            <div
-                                                                className="absolute top-5 -right-2 z-20 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
-                                                                onClick={() => handleDeleteSpellClick(spells.id)}
-                                                            >
-                                                                <FaRegTrashCan className="h-4 w-4 text-white" />
-                                                            </div>
+                                                            {spells.id !== null && (
+                                                                <div
+                                                                    className="absolute top-5 -right-2 z-20 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                    onClick={() => handleDeleteSpellClick(spells.id)}
+                                                                >
+                                                                    <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                                </div>
+                                                            )}
                                                             <p className="text-white text-xs font-md text-center p-2">{spells.description}</p>
                                                             <div className=''>
                                                                 <Image
@@ -1389,11 +1503,11 @@ export default function CharacterDetails() {
                                             <p className="font-bold text-md pt-1">{inventory.item}</p>
                                         </div>
                                         <div className='flex flex-col gap-5'>
-                                            {inventory.diceqtd && inventory.dicenumber && (
+                                            {inventory.diceQtd && inventory.diceNumber && (
                                                 <div className='flex justify-between pt-14'>
                                                     <p className="text-md font-bold mr-9 p-1">Dano</p>
                                                     <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
-                                                        {inventory.diceqtd}d{inventory.dicenumber}
+                                                        {inventory.diceQtd}d{inventory.diceNumber}
                                                     </p>
                                                 </div>
                                             )}

@@ -34,13 +34,12 @@ const AlertDialogContent = React.forwardRef<
   <AlertDialogPortal>
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
-      ref={ref}
+      ref={ref} // Mantém apenas essa atribuição
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] p-0 shadow-lg duration-200 sm:rounded-3xl", // Removi o padding aqui para evitar conflitos
+        "fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] p-0 shadow-lg duration-200 sm:rounded-3xl", 
         className
       )}
-      {...props}
-      ref={ref}
+      {...props} // Mantém a propagação dos outros props
     >
       {/* Estrutura personalizada */}
       <div className="bg-zinc-900 rounded-3xl border border-tabuleiro2 border-2">
@@ -54,6 +53,7 @@ const AlertDialogContent = React.forwardRef<
     </AlertDialogPrimitive.Content>
   </AlertDialogPortal>
 ))
+
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 
 const AlertDialogHeader = ({

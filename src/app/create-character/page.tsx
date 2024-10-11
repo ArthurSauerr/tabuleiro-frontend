@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 import { Poppins } from 'next/font/google';
 import Navbar from '@/components/navbar';
@@ -70,7 +71,7 @@ export default function CreateCharacter() {
             });
             console.log('Personagem criado com sucesso', response);
             router.push('/characters');
-        } catch (error: AxiosError | any) {
+        } catch (error: AxiosError | unknown) {
             console.error('Erro ao criar personagem: ', error);
         }
     };
