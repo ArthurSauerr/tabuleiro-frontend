@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { FaRegTrashCan } from "react-icons/fa6";
 import { TbPencil } from "react-icons/tb";
-import { FaCheck } from "react-icons/fa";
+import { FaCheck, FaSpinner } from "react-icons/fa";
 import { GiD4 } from "react-icons/gi";
 import { GiPerspectiveDiceSix } from "react-icons/gi";
 import { GiDiceEightFacesEight } from "react-icons/gi";
@@ -71,30 +71,30 @@ interface Spell {
     cost_type: string;
     dicenumber: number;
     diceqtd: number;
-    char_id: number; 
+    char_id: number;
 }
 
 
 interface Ability {
     id: number;
     name: string;
-    description: string; 
-    char_id: number;  
+    description: string;
+    char_id: number;
 }
 
 
 interface InventoryItem {
     id: number;
-    item: string; 
-    quantity: number; 
-    weight: number;  
-    dicenumber: number; 
-    diceqtd: number; 
-    char_id: number;   
+    item: string;
+    quantity: number;
+    weight: number;
+    dicenumber: number;
+    diceqtd: number;
+    char_id: number;
 }
 
 interface CharacterData {
-    character: Character; 
+    character: Character;
     inventory?: InventoryItem[];
     abilities?: Ability[];
     attributes?: Attribute[];
@@ -125,17 +125,24 @@ export default function CharacterDetails() {
     const [name, setName] = useState<string | null>(null);
     const [description, setDescription] = useState<string | null>(null);
     const [costType, setCostType] = useState<string | null>(null);
-    const [cost, setCost] = useState<number | null>(null); 
+    const [cost, setCost] = useState<number | null>(null);
     const [diceQtd, setDiceQtd] = useState<number | null>(null);
     const [diceNumber, setDiceNumber] = useState<number | null>(null);
-    const [quantity, setQuantity] = useState<number | null>(null); 
-    const [weight, setWeight] = useState<number | null>(null); 
-    const [value, setValue] = useState<number | null>(null); 
+    const [quantity, setQuantity] = useState<number | null>(null);
+    const [weight, setWeight] = useState<number | null>(null);
+    const [value, setValue] = useState<number | null>(null);
 
+    const [atr_id, setAtr_id] = useState<number | null>(null);
     const [item_id, setItem_id] = useState<number | null>(null);
     const [abl_id, setAbl_id] = useState<number | null>(null);
     const [spell_id, setSpell_id] = useState<number>(0);
 
+    const [isDialogLoading, setIsDialogLoading] = useState(false);
+    const [isDialogAbilityLoading, setIsDialogAbilityLoading] = useState(false);
+    const [isDialogSpellLoading, setIsDialogSpellLoading] = useState(false);
+    const [isDialogItemLoading, setIsDialogItemLoading] = useState(false);
+    const [isDialogAttributeLoading, setIsDialogAttributeLoading] = useState(false);
+    const [isButtonLoading, setIsButtonLoading] = useState(false);
 
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -194,8 +201,6 @@ export default function CharacterDetails() {
         setIsDialogDeleteSpellOpen(true);
     };
 
-
-
     useEffect(() => {
         const fetchCharacterData = async () => {
             if (id) {
@@ -230,6 +235,8 @@ export default function CharacterDetails() {
     }, [id]);
 
     const rollDice = async (diceNumber: number, atr_value: number) => {
+        setIsDialogOpen(true);
+        setIsDialogLoading(true);
         const diceData = {
             diceNumber: diceNumber,
             diceQtd: atr_value,
@@ -246,7 +253,7 @@ export default function CharacterDetails() {
                 setDiceSumResults(results.reduce((acc, curr) => acc + curr, 0));
                 setDiceMaxValue(Math.max(...results));
                 setDiceMinValue(Math.min(...results));
-                setIsDialogOpen(true);
+                setIsDialogLoading(false);
             } else {
                 console.error('Formato de resposta inesperado: ', response.data);
             }
@@ -283,7 +290,7 @@ export default function CharacterDetails() {
         if (isEditChar) {
             setIsEditChar(false);
         } else {
-            if (character) { 
+            if (character) {
                 setIsEditChar(true);
                 setEditedChar({
                     name: character.name,
@@ -293,7 +300,7 @@ export default function CharacterDetails() {
                     sub_class: character.char_subclass,
                 });
             } else {
-                console.error("Character is undefined"); 
+                console.error("Character is undefined");
             }
         }
     };
@@ -413,6 +420,7 @@ export default function CharacterDetails() {
 
 
     const updateCharacterBio = async () => {
+        setIsButtonLoading(true);
         const updatedCharacterData = {
             name: editedChar.name,
             age: editedChar.age,
@@ -445,6 +453,7 @@ export default function CharacterDetails() {
             });
 
             setIsEditChar(false);
+            setIsButtonLoading(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao atualizar os dados: ', error);
         }
@@ -452,6 +461,7 @@ export default function CharacterDetails() {
 
 
     const createSpell = async () => {
+        setIsDialogSpellLoading(true);
         const spellData = {
             name: name,
             description: description,
@@ -473,6 +483,7 @@ export default function CharacterDetails() {
             setCharacterData(response.data);
             setIsDialogCreateSpellOpen(false);
             clearFormFields();
+            setIsDialogSpellLoading(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar ataque: ', error);
         }
@@ -496,6 +507,7 @@ export default function CharacterDetails() {
     };
 
     const createAbility = async () => {
+        setIsDialogAbilityLoading(true);
         const abilityData = {
             name: name,
             description: description,
@@ -513,12 +525,14 @@ export default function CharacterDetails() {
             setCharacterData(response.data);
             setIsDialogCreateAbilityOpen(false);
             clearFormFields();
+            setIsDialogAbilityLoading(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar habilidade: ', error);
         }
     };
 
     const updateAbility = async () => {
+        setIsButtonLoading(true);
         const updatedAbilityData = {
             name: editedAbility.name,
             description: editedAbility.description,
@@ -539,6 +553,7 @@ export default function CharacterDetails() {
             });
             setEditingAbilityIndex(null);
             setCharacterData(response.data);
+            setIsButtonLoading(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao atualizar os dados: ', error);
         }
@@ -554,6 +569,7 @@ export default function CharacterDetails() {
                 withCredentials: true,
             });
             setCharacterData(response.data);
+            setAbl_id(null);
             setIsDialogDeleteAbilityOpen(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao excluir habilidade: ', error);
@@ -561,6 +577,7 @@ export default function CharacterDetails() {
     };
 
     const createAttribute = async () => {
+        setIsDialogAttributeLoading(true);
         const attributeData = {
             name: name,
             diceNumber: diceNumber,
@@ -579,6 +596,7 @@ export default function CharacterDetails() {
             setCharacterData(response.data);
             setIsDialogCreateAttributeOpen(false);
             clearFormFields();
+            setIsDialogAttributeLoading(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar atributo: ', error);
         }
@@ -612,6 +630,7 @@ export default function CharacterDetails() {
     };
 
     const deleteAttribute = async (atr_id: number | null) => {
+        setAtr_id(atr_id);
         try {
             await axios.delete(`https://tabuleiro-backend.onrender.com/attributes/delete/${id}/${atr_id}`, {
                 withCredentials: true,
@@ -628,6 +647,7 @@ export default function CharacterDetails() {
     };
 
     const createItem = async () => {
+        setIsDialogItemLoading(true);
         const itemData = {
             item: name,
             quantity: quantity,
@@ -648,6 +668,7 @@ export default function CharacterDetails() {
             setCharacterData(response.data);
             setIsDialogCreateItemOpen(false);
             clearFormFields();
+            setIsDialogItemLoading(false);
         } catch (error: AxiosError | any) {
             console.error('Erro ao cadastrar item: ', error);
         }
@@ -684,6 +705,13 @@ export default function CharacterDetails() {
         }
     };
 
+    const truncateText = (text: string, maxLength: number): string => {
+        if (text.length > maxLength) {
+            return text.slice(0, maxLength) + '...';
+        }
+        return text;
+    };
+
     if (loading || !data) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -701,22 +729,29 @@ export default function CharacterDetails() {
                     <AlertDialogHeader>
                         <AlertDialogTitle className='text-tabuleiro2 text-center text-xl'>Resultado da Rolagem</AlertDialogTitle>
                         <AlertDialogDescription className='text-white font-md text-center'>
-                            {diceResults.length > 0 ? (
-                                <div className='space-y-2'>
-                                    <div className='grid grid-cols-2 gap-2 gap-x-4 font-bold'>
-                                        <p className='text-right text-lg'>Dados: </p>
-                                        <span className='font-bold text-tabuleiro2 text-left text-lg'>{diceResults.join(', ')}</span>
-                                        <p className='text-right'>Soma: </p>
-                                        <span className='font-bold text-tabuleiro2 text-left'>{diceSumResults}</span>
-                                        <p className='text-right'>Maior valor: </p>
-                                        <span className='font-bold text-tabuleiro2 text-left'>{diceMaxValue}</span>
-                                        <p className='text-right'>Menor valor: </p>
-                                        <span className='font-bold text-tabuleiro2 text-left'>{diceMinValue}</span>
-                                    </div>
-                                </div>
+                            {isDialogLoading ? (
+                                <GiDiceTwentyFacesTwenty className="animate-spin h-12 w-12 mx-auto mt-5 text-tabuleiro2" />
                             ) : (
-                                <span>Nenhum resultado disponível.</span>
+                                <div>
+                                    {diceResults.length > 0 ? (
+                                        <div className='space-y-2'>
+                                            <div className='grid grid-cols-2 gap-2 gap-x-4 font-bold'>
+                                                <p className='text-right text-lg'>Dados: </p>
+                                                <span className='font-bold text-tabuleiro2 text-left text-lg'>{diceResults.join(', ')}</span>
+                                                <p className='text-right'>Soma: </p>
+                                                <span className='font-bold text-tabuleiro2 text-left'>{diceSumResults}</span>
+                                                <p className='text-right'>Maior valor: </p>
+                                                <span className='font-bold text-tabuleiro2 text-left'>{diceMaxValue}</span>
+                                                <p className='text-right'>Menor valor: </p>
+                                                <span className='font-bold text-tabuleiro2 text-left'>{diceMinValue}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <span>Nenhum resultado disponível.</span>
+                                    )}
+                                </div>
                             )}
+
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -899,7 +934,6 @@ export default function CharacterDetails() {
                 </AlertDialogContent>
             </AlertDialog>
 
-
             {/* Modal excluir item */}
             <AlertDialog open={isDialogDeleteItemOpen} onOpenChange={setIsDialogDeleteItemOpen}>
                 <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
@@ -1030,7 +1064,17 @@ export default function CharacterDetails() {
 
                                     </div>
                                     <div className='flex items-center justify-center pt-2'>
-                                        <Button variant={'tabuleiro'} onClick={() => updateCharacterBio()}>Salvar</Button>
+                                        <Button
+                                            onClick={() => updateCharacterBio()}
+                                            variant={"tabuleiro"}
+                                            disabled={isButtonLoading}
+                                        >
+                                            {isButtonLoading ? (
+                                                <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                            ) : (
+                                                "SALVAR"
+                                            )}
+                                        </Button>
                                     </div>
 
                                 </>
@@ -1038,16 +1082,23 @@ export default function CharacterDetails() {
                                 <div className='grid grid-cols-2 gap-x-4'>
                                     <p className='font-bold'>Idade</p>
                                     <p className='font-bold text-right'>Classe</p>
-                                    <p className='font-md mb-4'>{data.character.age} anos</p>
-                                    <p className='font-md mb-4 text-right'>{data.character.char_class}</p>
+                                    <p className='font-md mb-4' title={`${data.character.age} anos`}>
+                                        {truncateText(`${data.character.age} anos`, 10)}
+                                    </p>
+                                    <p className='font-md mb-4 text-right' title={data.character.char_class}>
+                                        {truncateText(data.character.char_class, 12)}
+                                    </p>
 
                                     <p className='font-bold'>País</p>
                                     <p className='font-bold text-right'>Sub-classe</p>
-                                    <p className='font-md'>{data.character.nacionality}</p>
-                                    <p className='font-md text-right'>{data.character.char_subclass}</p>
+                                    <p className='font-md' title={data.character.nacionality}>
+                                        {truncateText(data.character.nacionality, 12)}
+                                    </p>
+                                    <p className='font-md text-right' title={data.character.char_subclass}>
+                                        {truncateText(data.character.char_subclass, 12)}
+                                    </p>
                                 </div>
                             )}
-
 
                             {/* Progresso de Vida */}
                             <div className="relative w-full mt-4">
@@ -1267,51 +1318,60 @@ export default function CharacterDetails() {
                                             key={index}
                                             className="relative flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-20 w-24 hover:bg-tabuleiro2/15 group"
                                         >
-                                            <div
-                                                className="absolute -top-2 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                                onClick={() => handleEditAttributeClick(attribute)}
-                                            >
-                                                <TbPencil className="h-4 w-4 text-white" />
-                                            </div>
-                                            <div
-                                                className="absolute top-5 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                                onClick={() => deleteAttribute(attribute.id)}
-                                            >
-                                                <FaRegTrashCan className="h-4 w-4 text-white" />
-                                            </div>
-                                            {editingAttributeIndex === attribute.id ? (
-                                                <>
-                                                    <input
-                                                        type="number"
-                                                        name="value"
-                                                        value={editedAttribute.value}
-                                                        onChange={handleInputChangeAttribute}
-                                                        className="bg-transparent border-2 border-tabuleiro text-md text-white text-center rounded-md w-full h-40 p-2"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        name="name"
-                                                        maxLength={12}
-                                                        value={editedAttribute.name}
-                                                        onChange={handleInputChangeAttribute}
-                                                        className="bg-transparent border-2 border-tabuleiro text-white text-center text-sm rounded-md w-full py-1 "
-                                                    />
-                                                    <div
-                                                        className="absolute bottom-0 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer"
-                                                        onClick={() => updateAttribute()}
-                                                    >
-                                                        <FaCheck className="h-4 w-4 text-white" />
-                                                    </div>
-                                                </>
+                                            {atr_id === attribute.id && !isDialogDeleteSpellOpen ? (
+                                                <div className="flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-20 w-24 hover:bg-tabuleiro2/15 animate-pulse">
+                                                    <FaSpinner className="animate-spin h-6 w-6 text-white" />
+                                                    <p className="text-white text-sm mt-2">Deletando...</p>
+                                                </div>
                                             ) : (
                                                 <>
-                                                    <span className="text-2xl font-bold pb-1">
-                                                        {attribute.value}
-                                                    </span>
-
-                                                    <div className='absolute bottom-1 bg-tabuleiro2 w-full -mb-2 rounded-b-lg text-center'>
-                                                        <span className="font-bold text-sm ">{attribute.name}</span>
+                                                    <div
+                                                        className="absolute -top-2 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                        onClick={() => handleEditAttributeClick(attribute)}
+                                                    >
+                                                        <TbPencil className="h-4 w-4 text-white" />
                                                     </div>
+                                                    <div
+                                                        className="absolute top-5 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                        onClick={() => deleteAttribute(attribute.id)}
+                                                    >
+                                                        <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                    </div>
+                                                    {editingAttributeIndex === attribute.id ? (
+                                                        <>
+                                                            <input
+                                                                type="number"
+                                                                name="value"
+                                                                value={editedAttribute.value}
+                                                                onChange={handleInputChangeAttribute}
+                                                                className="bg-transparent border-2 border-tabuleiro text-md text-white text-center rounded-md w-full h-40 p-2"
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                name="name"
+                                                                maxLength={12}
+                                                                value={editedAttribute.name}
+                                                                onChange={handleInputChangeAttribute}
+                                                                className="bg-transparent border-2 border-tabuleiro text-white text-center text-sm rounded-md w-full py-1 "
+                                                            />
+                                                            <div
+                                                                className="absolute bottom-0 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer"
+                                                                onClick={() => updateAttribute()}
+                                                            >
+                                                                <FaCheck className="h-4 w-4 text-white" />
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-2xl font-bold pb-1">
+                                                                {attribute.value}
+                                                            </span>
+
+                                                            <div className='absolute bottom-1 bg-tabuleiro2 w-full -mb-2 rounded-b-lg text-center'>
+                                                                <span className="font-bold text-sm ">{attribute.name}</span>
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </>
                                             )}
                                         </li>
@@ -1346,6 +1406,13 @@ export default function CharacterDetails() {
                                 ) : (
                                     <li>Nenhum atributo disponível</li>
                                 )}
+                                {isDialogAttributeLoading && (
+                                    <li className="flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-20 w-24 hover:bg-tabuleiro2/15 animate-pulse">
+                                        <div className="text-white font-bold text-md">
+                                            <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                        </div>
+                                    </li>
+                                )}
                                 <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-full h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                     <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
                                 </div>
@@ -1365,66 +1432,80 @@ export default function CharacterDetails() {
                                         {data?.spells && data.spells.length > 0 ? (
                                             data.spells.map((spells, index) => (
                                                 <li key={index} className="relative w-44 h-60 perspective">
-                                                    <div className={`card ${expandedIndex === index ? 'flipped' : ''}`}>
-                                                        {/* Parte da frente da carta */}
-                                                        <div className="card-front flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-full">
-                                                            <div
-                                                                className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
-                                                                onClick={() => handleSearchClick(index)}
-                                                            >
-                                                                <IoSearchSharp className="h-4 w-4 text-white" />
-                                                            </div>
-                                                            <div className='absolute top-0 bg-tabuleiro2 w-full h-1/5 rounded-t-lg text-center z-10'>
-                                                                <p className="font-bold text-md pt-3">{spells.name}</p>
-                                                            </div>
-                                                            <div className='flex flex-col gap-5'>
-                                                                <div className='flex justify-between pt-14'>
-                                                                    <p className="text-md font-bold mr-9 p-1">Dano</p>
-                                                                    <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
-                                                                        {spells.diceqtd}d{spells.dicenumber}
-                                                                    </p>
-                                                                </div>
-                                                                <div className='flex justify-between'>
-                                                                    <p className="text-md font-bold p-1 ">{spells.cost_type}</p>
-                                                                    <p className={`text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 rounded-md shadow-md shadow-black/50 mb-6 ${getCostBackgroundClass(spells.cost_type)}`}> {spells.cost} </p>
-                                                                </div>
-                                                            </div>
-                                                            <Button onClick={() => rollDice(spells.dicenumber, spells.diceqtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
+                                                    {spell_id === spells.id && !isDialogDeleteSpellOpen ? (
+                                                        <div className="card-front flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-full w-full animate-pulse">
+                                                            <FaSpinner className="animate-spin h-8 w-8 text-white" />
+                                                            <p className="text-white mt-2">Deletando...</p>
                                                         </div>
-
-                                                        {/* Parte de trás da carta */}
-                                                        <div className="card-back flex flex-col items-center justify-center bg-tabuleiro rounded-lg h-full border border-2 border-tabuleiro2">
-
-                                                            <div
-                                                                className="absolute top-5 -right-2 z-20 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
-                                                                onClick={() => handleDeleteSpellClick(spells.id)}
-                                                            >
-                                                                <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                    ) : (
+                                                        <div className={`card ${expandedIndex === index ? 'flipped' : ''}`}>
+                                                            {/* Parte da frente da carta */}
+                                                            <div className="card-front flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-full">
+                                                                <div
+                                                                    className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                    onClick={() => handleSearchClick(index)}
+                                                                >
+                                                                    <IoSearchSharp className="h-4 w-4 text-white" />
+                                                                </div>
+                                                                <div className='absolute top-0 bg-tabuleiro2 w-full h-1/5 rounded-t-lg text-center z-10'>
+                                                                    <p className="font-bold text-md pt-3">{spells.name}</p>
+                                                                </div>
+                                                                <div className='flex flex-col gap-5'>
+                                                                    <div className='flex justify-between pt-14'>
+                                                                        <p className="text-md font-bold mr-9 p-1">Dano</p>
+                                                                        <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
+                                                                            {spells.diceqtd}d{spells.dicenumber}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className='flex justify-between'>
+                                                                        <p className="text-md font-bold p-1 ">{spells.cost_type}</p>
+                                                                        <p className={`text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 rounded-md shadow-md shadow-black/50 mb-6 ${getCostBackgroundClass(spells.cost_type)}`}> {spells.cost} </p>
+                                                                    </div>
+                                                                </div>
+                                                                <Button onClick={() => rollDice(spells.dicenumber, spells.diceqtd)} variant={'attackCard'} className='w-2/3'>Usar</Button>
                                                             </div>
 
-                                                            <p className="text-white text-xs font-md text-center p-2">{spells.description}</p>
-                                                            <div className=''>
-                                                                <Image
-                                                                    src="/assets/Octahedron.svg"
-                                                                    width={55}
-                                                                    height={55}
-                                                                    alt="Tabuleiro Icon"
-                                                                    className="transform rotate-[-30deg]"
-                                                                />
-                                                            </div>
+                                                            {/* Parte de trás da carta */}
+                                                            <div className="card-back flex flex-col items-center justify-center bg-tabuleiro rounded-lg h-full border border-2 border-tabuleiro2">
 
-                                                            <div
-                                                                className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
-                                                                onClick={() => handleSearchClick(index)}
-                                                            >
-                                                                <IoSearchSharp className="h-4 w-4 text-white" />
+                                                                <div
+                                                                    className="absolute top-5 -right-2 z-20 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                    onClick={() => handleDeleteSpellClick(spells.id)}
+                                                                >
+                                                                    <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                                </div>
+
+                                                                <p className="text-white text-xs font-md text-center p-2">{spells.description}</p>
+                                                                <div className=''>
+                                                                    <Image
+                                                                        src="/assets/Octahedron.svg"
+                                                                        width={55}
+                                                                        height={55}
+                                                                        alt="Tabuleiro Icon"
+                                                                        className="transform rotate-[-30deg]"
+                                                                    />
+                                                                </div>
+
+                                                                <div
+                                                                    className="absolute -top-2 -right-2 z-20 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2"
+                                                                    onClick={() => handleSearchClick(index)}
+                                                                >
+                                                                    <IoSearchSharp className="h-4 w-4 text-white" />
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </li>
                                             ))
                                         ) : (
                                             <li>Nenhum ataque disponível</li>
+                                        )}
+                                        {isDialogSpellLoading && (
+                                            <li className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 animate-pulse">
+                                                <div className="text-white font-bold text-md">
+                                                    <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                                </div>
+                                            </li>
                                         )}
                                         <div onClick={() => setIsDialogCreateSpellOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                             <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
@@ -1448,51 +1529,79 @@ export default function CharacterDetails() {
                                                     key={index}
                                                     className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 group"
                                                 >
-                                                    <div
-                                                        className="absolute -top-2 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                                        onClick={() => handleEditAbilityClick(ability)}
-                                                    >
-                                                        <TbPencil className="h-4 w-4 text-white" />
-                                                    </div>
-                                                    <div
-                                                        className="absolute top-5 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                                        onClick={() => handleDeleteAbilityClick(ability.id)}
-                                                    >
-                                                        <FaRegTrashCan className="h-4 w-4 text-white" />
-                                                    </div>
-
-                                                    {editingAbilityIndex === ability.id ? (
-                                                        <>
-                                                            <input
-                                                                type="text"
-                                                                name="name"
-                                                                maxLength={12}
-                                                                value={editedAbility.name}
-                                                                onChange={handleInputChangeAbility}
-                                                                className="bg-transparent border-2 border-tabuleiro text-white text-center rounded-md w-full py-1 "
-                                                            />
-                                                            <textarea
-                                                                name="description"
-                                                                value={editedAbility.description}
-                                                                onChange={handleInputChangeAbility}
-                                                                className="bg-transparent border-2 border-tabuleiro text-xs text-white rounded-md w-full h-48 p-2 mt-2"
-                                                            />
-                                                            <Button onClick={() => updateAbility()} variant={'tabuleiro'}>Salvar</Button>
-                                                        </>
+                                                    {/* Exibir estado de carregamento para a habilidade sendo deletada */}
+                                                    {abl_id === ability.id && !isDialogDeleteAbilityOpen ? (
+                                                        <div className="flex flex-col items-center justify-center h-full w-full animate-pulse">
+                                                            <FaSpinner className="animate-spin h-8 w-8 text-white" />
+                                                            <p className="text-white mt-2">Deletando...</p>
+                                                        </div>
                                                     ) : (
                                                         <>
-                                                            <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
-                                                                <p className="font-bold text-md pt-1">{ability.name}</p>
+                                                            <div
+                                                                className="absolute -top-2 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                                onClick={() => handleEditAbilityClick(ability)}
+                                                            >
+                                                                <TbPencil className="h-4 w-4 text-white" />
                                                             </div>
-                                                            <ScrollArea className='overflow-y-auto text-xs p-2 pt-6 break-words max-h-[220px] z-10'>
-                                                                <p>{ability.description}</p>
-                                                            </ScrollArea>
+                                                            <div
+                                                                className="absolute top-5 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                                onClick={() => handleDeleteAbilityClick(ability.id)}
+                                                            >
+                                                                <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                            </div>
+
+                                                            {editingAbilityIndex === ability.id ? (
+                                                                <>
+                                                                    <input
+                                                                        type="text"
+                                                                        name="name"
+                                                                        maxLength={12}
+                                                                        value={editedAbility.name}
+                                                                        onChange={handleInputChangeAbility}
+                                                                        className="bg-transparent border-2 border-tabuleiro text-white text-center rounded-md w-full py-1 "
+                                                                    />
+                                                                    <textarea
+                                                                        name="description"
+                                                                        value={editedAbility.description}
+                                                                        onChange={handleInputChangeAbility}
+                                                                        className="bg-transparent border-2 border-tabuleiro text-xs text-white rounded-md w-full h-48 p-2 mt-2"
+                                                                    />
+                                                                    <Button
+                                                                        onClick={() => updateAbility()}
+                                                                        variant={"tabuleiro"}
+                                                                        disabled={isButtonLoading}
+                                                                    >
+                                                                        {isButtonLoading ? (
+                                                                            <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                                                        ) : (
+                                                                            "SALVAR"
+                                                                        )}
+                                                                    </Button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-20'>
+                                                                        <p className="font-bold text-md pt-1">{ability.name}</p>
+                                                                    </div>
+                                                                    <ScrollArea className='overflow-y-auto text-xs p-2 pt-6 break-words max-h-[220px] z-10'>
+                                                                        <p>{ability.description}</p>
+                                                                    </ScrollArea>
+                                                                </>
+                                                            )}
                                                         </>
                                                     )}
                                                 </li>
                                             ))
                                         ) : (
                                             <li>Nenhuma habilidade disponível</li>
+                                        )}
+                                        {/* Card temporário de carregamento para criação de habilidade */}
+                                        {isDialogAbilityLoading && (
+                                            <li className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 animate-pulse">
+                                                <div className="text-white font-bold text-md">
+                                                    <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                                </div>
+                                            </li>
                                         )}
                                         <div onClick={() => setIsDialogCreateAbilityOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                             <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
@@ -1520,37 +1629,53 @@ export default function CharacterDetails() {
                                         key={index}
                                         className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 group"
                                     >
-                                        <div
-                                            className="absolute -top-2 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                            onClick={() => handleDeleteItemClick(inventory.id)}
-                                        >
-                                            <FaRegTrashCan className="h-4 w-4 text-white" />
-                                        </div>
-                                        <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-10'>
-                                            <p className="font-bold text-md pt-1">{inventory.item}</p>
-                                        </div>
-                                        <div className='flex flex-col gap-5'>
-                                            {inventory.diceqtd && inventory.dicenumber && (
-                                                <div className='flex justify-between pt-14'>
-                                                    <p className="text-md font-bold mr-9 p-1">Dano</p>
-                                                    <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
-                                                        {inventory.diceqtd}d{inventory.dicenumber}
-                                                    </p>
+                                        {item_id === inventory.id && !isDialogDeleteItemOpen ? (
+                                            <div className="flex flex-col items-center justify-center h-full w-full animate-pulse">
+                                                <FaSpinner className="animate-spin h-8 w-8 text-white" />
+                                                <p className="text-white mt-2">Deletando...</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div
+                                                    className="absolute -top-2 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                    onClick={() => handleDeleteItemClick(inventory.id)}
+                                                >
+                                                    <FaRegTrashCan className="h-4 w-4 text-white" />
                                                 </div>
-                                            )}
-                                            <div className='flex justify-between'>
-                                                <p className="text-md font-bold mr-9 p-1">Quantia</p>
-                                                <p className="text-md font-bold text-right p-1">{inventory.quantity}</p>
-                                            </div>
-                                            <div className='flex justify-between'>
-                                                <p className="text-md font-bold p-1 mb-8">Peso</p>
-                                                <p className="text-md font-bold text-right p-1">{Math.round(inventory.weight)}</p>
-                                            </div>
-                                        </div>
+                                                <div className='absolute top-0 bg-tabuleiro2 w-full rounded-t-lg text-center z-10'>
+                                                    <p className="font-bold text-md pt-1">{inventory.item}</p>
+                                                </div>
+                                                <div className='flex flex-col gap-5'>
+                                                    {inventory.diceqtd && inventory.dicenumber && (
+                                                        <div className='flex justify-between pt-14'>
+                                                            <p className="text-md font-bold mr-9 p-1">Dano</p>
+                                                            <p className="text-md font-bold text-right bg-healthBar p-1 pl-2 pr-2 outline outline-2 outline-[#DF6565] rounded-md shadow-md shadow-black/50">
+                                                                {inventory.diceqtd}d{inventory.dicenumber}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    <div className='flex justify-between'>
+                                                        <p className="text-md font-bold mr-9 p-1">Quantia</p>
+                                                        <p className="text-md font-bold text-right p-1">{inventory.quantity}</p>
+                                                    </div>
+                                                    <div className='flex justify-between'>
+                                                        <p className="text-md font-bold p-1 mb-8">Peso</p>
+                                                        <p className="text-md font-bold text-right p-1">{Math.round(inventory.weight)}</p>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </li>
                                 ))
                             ) : (
                                 <li>Nenhum item disponível</li>
+                            )}
+                            {isDialogItemLoading && (
+                                <li className="relative flex flex-col items-center justify-center bg-[#211F46] border-2 border-tabuleiro rounded-lg h-60 w-44 animate-pulse">
+                                    <div className="text-white font-bold text-md">
+                                        <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                    </div>
+                                </li>
                             )}
                             <div onClick={() => setIsDialogCreateItemOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-44 h-60 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                 <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>

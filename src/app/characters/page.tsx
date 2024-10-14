@@ -12,7 +12,6 @@ const poppins = Poppins({
     weight: ['300', '400', '700'],
 });
 
-// Defina a interface do personagem
 interface Character {
     id: string;
     name: string;
@@ -23,7 +22,7 @@ interface Character {
 
 export default function Characters() {
     const router = useRouter();
-    const [characters, setCharacters] = useState<Character[]>([]); // Tipando characters
+    const [characters, setCharacters] = useState<Character[]>([]);
     const [hasCharacters, setHasCharacters] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -77,9 +76,9 @@ export default function Characters() {
                         <div>
                             <h1 className="text-center text-tabuleiro2 font-bold mb-4 text-xl">Seus Personagens</h1>
                             <ul className="flex space-x-4 justify-center">
-                                {characters.map((character) => ( // Removido o index, pois o id pode ser usado como key
+                                {characters.map((character) => (
                                     <div
-                                        key={character.id} // Usando o id como key
+                                        key={character.id}
                                         className="relative group border border-2 border-tabuleiro2 p-4 rounded-lg shadow-md bg-tabuleiro2/15 w-44 h-40 transition-transform duration-300 ease-in-out hover:scale-105"
                                     >
                                         <li className="text-white font-medium text-center group-hover:opacity-0 transition-opacity duration-150 ease-in-out">

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { useState } from 'react';
 import axios, { AxiosResponse, AxiosError } from 'axios';
+import { FaSpinner } from 'react-icons/fa';
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -31,6 +32,7 @@ export default function CreateCharacter() {
     const [current_stamina, setCurrent_stamina] = useState('');
     const [current_mana, setCurrent_mana] = useState('');
     const [current_sanity, setCurrent_sanity] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const canProceed = name !== '' && age !== '' && char_class !== '';
 
@@ -43,11 +45,13 @@ export default function CreateCharacter() {
     }
 
     const saveCharacter = async () => {
+        setIsLoading(true);
+
         const currentHealth = max_health ? Number(max_health) : undefined;
         const currentStamina = max_stamina ? Number(max_stamina) : undefined;
         const currentMana = max_mana ? Number(max_mana) : undefined;
         const currentSanity = max_sanity ? Number(max_sanity) : undefined;
-    
+
         const characterData = {
             name: name,
             age: age,
@@ -64,7 +68,7 @@ export default function CreateCharacter() {
             current_mana: currentMana,
             current_sanity: currentSanity
         };
-    
+
         try {
             const response: AxiosResponse = await axios.post('https://tabuleiro-backend.onrender.com/characters/create', characterData, {
                 withCredentials: true
@@ -102,6 +106,7 @@ export default function CreateCharacter() {
                                         <Input
                                             type="text"
                                             placeholder="Nome *"
+                                            maxLength={18}
                                             className="p-6 rounded-xl w-full bg-white text-black"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
@@ -111,11 +116,17 @@ export default function CreateCharacter() {
                                             placeholder="Idade *"
                                             className="p-6 rounded-xl w-full bg-white text-black"
                                             value={age}
-                                            onChange={(e) => setAge(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value.length <= 3) {
+                                                    setAge(value);
+                                                }
+                                            }}
                                         />
                                         <Input
                                             type="text"
                                             placeholder="Nacionalidade"
+                                            maxLength={15}
                                             className="p-6 rounded-xl w-full bg-white text-black"
                                             value={nacionality}
                                             onChange={(e) => setNacionality(e.target.value)}
@@ -123,6 +134,7 @@ export default function CreateCharacter() {
                                         <Input
                                             type="text"
                                             placeholder="Classe *"
+                                            maxLength={15}
                                             className="p-6 rounded-xl w-full bg-white text-black"
                                             value={char_class}
                                             onChange={(e) => setChar_class(e.target.value)}
@@ -130,6 +142,7 @@ export default function CreateCharacter() {
                                         <Input
                                             type="text"
                                             placeholder="Sub-Classe"
+                                            maxLength={15}
                                             className="p-6 rounded-xl w-full bg-white text-black"
                                             value={char_subclass}
                                             onChange={(e) => setChar_subclass(e.target.value)}
@@ -158,36 +171,62 @@ export default function CreateCharacter() {
                                             placeholder="Vida"
                                             className="p-6 rounded-xl w-1/3 bg-white text-black"
                                             value={max_health}
-                                            onChange={(e) => setMax_health(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value.length <= 3) {
+                                                    setMax_health(value);
+                                                }
+                                            }}
                                         />
                                         <Input
                                             type="number"
                                             placeholder="Stamina"
                                             className="p-6 rounded-xl w-1/3 bg-white text-black"
                                             value={max_stamina}
-                                            onChange={(e) => setMax_stamina(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value.length <= 3) {
+                                                    setMax_stamina(value);
+                                                }
+                                            }}
                                         />
                                         <Input
                                             type="number"
                                             placeholder="Mana"
                                             className="p-6 rounded-xl w-1/3 bg-white text-black"
                                             value={max_mana}
-                                            onChange={(e) => setMax_mana(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value.length <= 3) {
+                                                    setMax_mana(value);
+                                                }
+                                            }}
                                         />
                                         <Input
                                             type="number"
                                             placeholder="Sanidade"
                                             className="p-6 rounded-xl w-1/3 bg-white text-black"
                                             value={max_sanity}
-                                            onChange={(e) => setMax_sanity(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value.length <= 3) {
+                                                    setMax_sanity(value);
+                                                }
+                                            }}
                                         />
                                     </div>
                                     <div className="flex justify-center mt-10">
                                         <Button
                                             onClick={saveCharacter}
+                                            variant={"tabuleiro"}
                                             className="p-6 w-1/3 rounded-xl"
-                                            variant={'tabuleiro'}>
-                                            SALVAR
+                                            disabled={isLoading}
+                                        >
+                                            {isLoading ? (
+                                                <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                            ) : (
+                                                "CADASTRAR"
+                                            )}
                                         </Button>
                                     </div>
                                 </div>

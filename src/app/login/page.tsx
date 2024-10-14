@@ -8,7 +8,8 @@ import axios from 'axios';
 import { HiOutlineMail } from "react-icons/hi";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
+import { FaSpinner } from 'react-icons/fa';
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -19,26 +20,22 @@ export default function Page() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        console.log('Submitting form...');
-
+        setIsLoading(true);
         const userData = {
             email: email,
             password: password
         };
 
-        console.log('User Data: ', userData);
-
         try {
-            const response = await axios.post(
+            await axios.post(
                 'https://tabuleiro-backend.onrender.com/users/signin',
                 userData,
                 { withCredentials: true }
-            );            
-            console.log('Response:', response.data);
+            );
             router.push('/');
         } catch (error) {
             console.error('ERRO: ', error);
@@ -81,8 +78,18 @@ export default function Page() {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-
-                    <Button type="submit" variant={"tabuleiro"} className="p-6 rounded-xl w-full">ENTRAR</Button>
+                    <Button
+                        type="submit"
+                        variant={"tabuleiro"}
+                        className="p-6 rounded-xl w-full"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                        ) : (
+                            "ENTRAR"
+                        )}
+                    </Button>
                 </form>
                 <div className='flex items-center my-8'>
                     <Separator className="flex-grow w-1/3 bg-zinc-600" />

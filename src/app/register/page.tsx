@@ -9,6 +9,8 @@ import { FiUser } from 'react-icons/fi';
 import { HiOutlineMail } from "react-icons/hi";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { FaSpinner } from 'react-icons/fa';
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -16,14 +18,15 @@ const poppins = Poppins({
 });
 
 export default function Page() {
+    const router = useRouter();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        console.log('Submitting form...');
+        setIsLoading(true);
 
         const userData = {
             name: name,
@@ -31,11 +34,9 @@ export default function Page() {
             password: password
         };
 
-        console.log('User Data: ', userData);
-
         try {
-            const response = await axios.post('https://tabuleiro-backend.onrender.com/users/signup', userData);
-            console.log('Response:', response.data);
+            await axios.post('https://tabuleiro-backend.onrender.com/users/signup', userData);
+            router.push('/login');
         } catch (error) {
             console.error('ERRO: ', error);
         }
@@ -91,7 +92,18 @@ export default function Page() {
                         />
                     </div>
 
-                    <Button type="submit" variant={"tabuleiro"} className="p-6 rounded-xl w-full">CADASTRAR</Button>
+                    <Button
+                        type="submit"
+                        variant={"tabuleiro"}
+                        className="p-6 rounded-xl w-full"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                        ) : (
+                            "CADASTRAR"
+                        )}
+                    </Button>
                 </form>
                 <div className='flex items-center my-8'>
                     <Separator className="flex-grow w-1/3 bg-zinc-600" />
