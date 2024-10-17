@@ -31,8 +31,6 @@ import { GiD10 } from "react-icons/gi";
 import { GiD12 } from "react-icons/gi";
 import { GiDiceTwentyFacesTwenty } from "react-icons/gi";
 
-
-
 const poppins = Poppins({
     subsets: ['latin'],
     weight: ['300', '400', '700'],
@@ -52,14 +50,24 @@ interface Character {
     max_mana: number;
     current_mana: number;
     money: number;
+    armor_class: number;
+    movement: number;
+    initiative: number;
 }
-
 
 interface Attribute {
     dicenumber: number;
     id: number | null;
     name: string;
     value: number;
+    char_id: number;
+}
+
+interface Skill {
+    id: number | null;
+    name: string;
+    value: number;
+    parent_attribute: string | null;
     char_id: number;
 }
 
@@ -74,14 +82,12 @@ interface Spell {
     char_id: number;
 }
 
-
 interface Ability {
     id: number;
     name: string;
     description: string;
     char_id: number;
 }
-
 
 interface InventoryItem {
     id: number;
@@ -95,12 +101,12 @@ interface InventoryItem {
 
 interface CharacterData {
     character: Character;
-    inventory?: InventoryItem[];
-    abilities?: Ability[];
     attributes?: Attribute[];
+    skills?: Skill[];
     spells?: Spell[];
+    abilities?: Ability[];
+    inventory?: InventoryItem[];
 }
-
 
 export default function CharacterDetails() {
     const { id } = useParams();
@@ -117,10 +123,12 @@ export default function CharacterDetails() {
     const [isDialogCreateSpellOpen, setIsDialogCreateSpellOpen] = useState(false);
     const [isDialogCreateAbilityOpen, setIsDialogCreateAbilityOpen] = useState(false);
     const [isDialogCreateAttributeOpen, setIsDialogCreateAttributeOpen] = useState(false);
+    const [isDialogCreateSkillOpen, setIsDialogCreateSkillOpen] = useState(false);
     const [isDialogCreateItemOpen, setIsDialogCreateItemOpen] = useState(false);
     const [isDialogDeleteItemOpen, setIsDialogDeleteItemOpen] = useState(false);
     const [isDialogDeleteAbilityOpen, setIsDialogDeleteAbilityOpen] = useState(false);
     const [isDialogDeleteSpellOpen, setIsDialogDeleteSpellOpen] = useState(false);
+    const [isDialogDeleteSkillOpen, setIsDialogDeleteSkillOpen] = useState(false);
 
     const [name, setName] = useState<string | null>(null);
     const [description, setDescription] = useState<string | null>(null);
@@ -131,14 +139,17 @@ export default function CharacterDetails() {
     const [quantity, setQuantity] = useState<number | null>(null);
     const [weight, setWeight] = useState<number | null>(null);
     const [value, setValue] = useState<number | null>(null);
+    const [parent_attribute, setParent_attribute] = useState<string | null>(null);
 
     const [atr_id, setAtr_id] = useState<number | null>(null);
     const [item_id, setItem_id] = useState<number | null>(null);
     const [abl_id, setAbl_id] = useState<number | null>(null);
     const [spell_id, setSpell_id] = useState<number>(0);
+    const [skill_id, setSkill_id] = useState<number | null>(null);
 
     const [isDialogLoading, setIsDialogLoading] = useState(false);
     const [isDialogAbilityLoading, setIsDialogAbilityLoading] = useState(false);
+    const [isDialogSkillLoading, setIsDialogSkillLoading] = useState(false);
     const [isDialogSpellLoading, setIsDialogSpellLoading] = useState(false);
     const [isDialogItemLoading, setIsDialogItemLoading] = useState(false);
     const [isDialogAttributeLoading, setIsDialogAttributeLoading] = useState(false);
@@ -156,10 +167,16 @@ export default function CharacterDetails() {
         current_sanity: 0,
         max_sanity: 0,
         money: 0,
+        armor_class: 0,
+        movement: 0,
+        initiative: 0
     });
 
     const [editingAbilityIndex, setEditingAbilityIndex] = useState<number | null>(null);
     const [editedAbility, setEditedAbility] = useState({ name: '', description: '' });
+
+    const [editingSkillIndex, setEditingSkillIndex] = useState<number | null>(null);
+    const [editedSkill, setEditedSkill] = useState({ name: '', value: 0, parent_attribute: '' });
 
     const [editingAttributeIndex, setEditingAttributeIndex] = useState<number | null>(null);
     const [editedAttribute, setEditedAttribute] = useState({ name: '', value: 0 });
@@ -168,7 +185,6 @@ export default function CharacterDetails() {
     const [editedChar, setEditedChar] = useState({ name: '', age: 0, class: '', sub_class: '', nacionality: '' });
 
     type StatusKey = 'current_health' | 'max_health' | 'current_stamina' | 'max_stamina' | 'current_mana' | 'max_mana' | 'current_sanity' | 'max_sanity' | 'money';
-
 
     const clearFormFields = () => {
         setName("");
@@ -180,6 +196,7 @@ export default function CharacterDetails() {
         setQuantity(null);
         setWeight(null);
         setValue(null);
+        setParent_attribute("");
     };
 
     const handleSearchClick = (index: number) => {
@@ -201,6 +218,11 @@ export default function CharacterDetails() {
         setIsDialogDeleteSpellOpen(true);
     };
 
+    const handleDeleteSkillClick = (skill_id: number) => {
+        setSkill_id(skill_id);
+        setIsDialogDeleteSkillOpen(true);
+    };
+
     useEffect(() => {
         const fetchCharacterData = async () => {
             if (id) {
@@ -220,7 +242,10 @@ export default function CharacterDetails() {
                         max_mana: response.data.character.max_mana,
                         current_sanity: response.data.character.current_sanity,
                         max_sanity: response.data.character.max_sanity,
-                        money: response.data.character.money
+                        money: response.data.character.money,
+                        armor_class: response.data.character.armor_class,
+                        movement: response.data.character.movement,
+                        initiative: response.data.character.initiative,
                     });
 
                     setLoading(false);
@@ -239,7 +264,7 @@ export default function CharacterDetails() {
         setIsDialogLoading(true);
         const diceData = {
             diceNumber: diceNumber,
-            diceQtd: atr_value,
+            diceQtd: Math.abs(atr_value)
         };
 
         try {
@@ -261,6 +286,48 @@ export default function CharacterDetails() {
             console.error('Erro ao rolar os dados: ', error);
         }
     };
+
+    const rollSkillCheck = async (diceNumber: number, atr_value: number, parent_attribute: string) => {
+        setIsDialogOpen(true);
+        setIsDialogLoading(true);
+        const diceData = {
+            diceNumber: diceNumber,
+            diceQtd: Math.abs(atr_value)
+        };
+
+        try {
+            const response: AxiosResponse = await axios.post('https://tabuleiro-backend.onrender.com/dice/roll', diceData, {
+                withCredentials: true,
+            });
+
+            const results = response.data.result;
+            if (results && Array.isArray(results)) {
+                setDiceResults(results)
+                setDiceSumResults(results.reduce((acc, curr) => acc + curr, 0));
+                setDiceMaxValue(Math.max(...results));
+                setDiceMinValue(Math.min(...results));
+                setIsDialogLoading(false);
+            } else {
+                console.error('Formato de resposta inesperado: ', response.data);
+            }
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao rolar os dados: ', error);
+        }
+    };
+
+
+    const handleEditSkillClick = (skill: Skill) => {
+        if (editingSkillIndex === skill.id) {
+            setEditingSkillIndex(null);
+        } else {
+            setEditingSkillIndex(skill.id);
+            setEditedSkill({
+                name: skill.name,
+                value: skill.value,
+                parent_attribute: skill.parent_attribute ?? ''
+            });
+        }
+    }
 
     const handleEditAbilityClick = (ability: Ability) => {
         if (editingAbilityIndex === ability.id) {
@@ -335,6 +402,16 @@ export default function CharacterDetails() {
         }
     };
 
+    const handleInputChangeSkill = (e: { target: { name: any; value: any; }; }) => {
+        if (e && e.target) {
+            const { name, value } = e.target;
+            setEditedSkill((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+    };
+
     const handleInputChangeAttribute = (e: { target: { name: any; value: any; }; }) => {
         if (e && e.target) {
             const { name, value } = e.target;
@@ -379,6 +456,9 @@ export default function CharacterDetails() {
         current_sanity: number;
         max_sanity: number;
         money: number;
+        armor_class: number;
+        movement: number;
+        initiative: number;
     }) => {
         const updatedCharacterData = {
             current_health: updatedStatus.current_health,
@@ -389,7 +469,10 @@ export default function CharacterDetails() {
             max_mana: updatedStatus.max_mana,
             current_sanity: updatedStatus.current_sanity,
             max_sanity: updatedStatus.max_sanity,
-            money: updatedStatus.money
+            money: updatedStatus.money,
+            armor_class: updatedStatus.armor_class,
+            movement: updatedStatus.movement,
+            initiative: updatedStatus.initiative,
         };
 
         try {
@@ -503,6 +586,77 @@ export default function CharacterDetails() {
             setExpandedIndex(null);
         } catch (error: AxiosError | any) {
             console.error('Erro ao excluir ataque: ', error);
+        }
+    };
+
+    const createSkill = async () => {
+        setIsDialogSkillLoading(true);
+        const skillData = {
+            name: name,
+            value: value,
+            parent_attribute: parent_attribute,
+            char_id: id,
+        };
+
+        try {
+            await axios.post('https://tabuleiro-backend.onrender.com/skills/create', skillData, {
+                withCredentials: true,
+            });
+
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setCharacterData(response.data);
+            setIsDialogCreateSkillOpen(false);
+            clearFormFields();
+            setIsDialogSkillLoading(false);
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao cadastrar aptidão: ', error);
+        }
+    };
+
+    const updateSkill = async () => {
+        const updatedSkillData = {
+            name: editedSkill.name,
+            value: editedSkill.value,
+            parent_attribute: editedSkill.parent_attribute,
+            char_id: id,
+            skill_id: editingSkillIndex,
+        };
+
+        try {
+            await axios.put(
+                `https://tabuleiro-backend.onrender.com/skills/update`,
+                updatedSkillData,
+                {
+                    withCredentials: true,
+                }
+            );
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setEditingSkillIndex(null);
+            setCharacterData(response.data);
+            clearFormFields();
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao atualizar os dados: ', error);
+        }
+    };
+
+    const deleteSkill = async () => {
+        try {
+            await axios.delete(`https://tabuleiro-backend.onrender.com/skills/delete/${id}/${skill_id}`, {
+                withCredentials: true,
+            });
+
+            const response = await axios.get(`https://tabuleiro-backend.onrender.com/characters/get-all-character/${id}`, {
+                withCredentials: true,
+            });
+            setCharacterData(response.data);
+            setSkill_id(null);
+            setIsDialogDeleteSkillOpen(false);
+        } catch (error: AxiosError | any) {
+            console.error('Erro ao excluir habilidade: ', error);
         }
     };
 
@@ -934,6 +1088,62 @@ export default function CharacterDetails() {
                 </AlertDialogContent>
             </AlertDialog>
 
+            {/* Modal criar aptidao */}
+            <AlertDialog open={isDialogCreateSkillOpen} onOpenChange={setIsDialogCreateSkillOpen}>
+                <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className='text-tabuleiro2 text-center text-xl'>Nova aptidão</AlertDialogTitle>
+                        <AlertDialogDescription className='text-white font-md text-center'>
+                            <div className='space-y-2'>
+                                <div className='flex flex-col gap-4 mt-4 items-center'>
+                                    <Input
+                                        type="text"
+                                        placeholder="Nome"
+                                        className='w-[195px] border-tabuleiro border-2'
+                                        maxLength={14}
+                                        value={name ?? ''}
+                                        onChange={(e) => setName(e.target.value)}
+                                    />
+                                    <select
+                                        className='flex p-2 bg-tabuleiro text-white rounded-md'
+                                        value={parent_attribute ?? ''}
+                                        onChange={(e) => setParent_attribute(e.target.value)}
+                                    >
+                                        <option value="" disabled>Selecione um atributo</option>
+                                        {data?.attributes?.map((attribute, index) => (
+                                            <option key={index} value={attribute.name}>
+                                                {attribute.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <Input
+                                        type="number"
+                                        placeholder="Vantagem/Desvantagem"
+                                        className='w-[195px] text-center border-tabuleiro border-2 text-xs'
+                                        value={value ?? ''}
+                                        onChange={(e) => setValue(Number(e.target.value))}
+                                    />
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className='pt-6'>
+                        <AlertDialogAction
+                            className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50'
+                            onClick={() => setIsDialogCreateSpellOpen(false)}
+                        >
+                            Fechar
+                        </AlertDialogAction>
+                        <AlertDialogAction
+                            className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-tabuleiro2 hover:text-tabuleiro'
+                            onClick={() => createSkill()}
+                        >
+                            Salvar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Modal excluir item */}
             <AlertDialog open={isDialogDeleteItemOpen} onOpenChange={setIsDialogDeleteItemOpen}>
                 <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
@@ -984,6 +1194,31 @@ export default function CharacterDetails() {
                 </AlertDialogContent>
             </AlertDialog>
 
+            {/* Modal excluir skill */}
+            <AlertDialog open={isDialogDeleteSkillOpen} onOpenChange={setIsDialogDeleteSkillOpen}>
+                <AlertDialogContent className={`${poppins.className} w-[500px] max-w-[80vw]`}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className='text-tabuleiro2 text-center text-xl'>Excluir aptidão</AlertDialogTitle>
+                        <AlertDialogDescription className='text-white font-md text-center'>
+                            <div className='space-y-2'>
+                                <div className='flex-col '>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Tem certeza que deseja excluir?</p>
+                                    <p className='text-md mr-7 ml-7 text-tabuleiro2 font-bold text-center'>Essa ação não poderá ser desfeita.</p>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className='pt-6'>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro/15 hover:bg-tabuleiro/50' onClick={() => setIsDialogDeleteSkillOpen(false)}>
+                            Cancelar
+                        </AlertDialogAction>
+                        <AlertDialogAction className='text-tabuleiro2 font-bold bg-tabuleiro hover:bg-healthBar hover:text-white' onClick={() => deleteSkill()}>
+                            Excluir
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Modal excluir ataque */}
             <AlertDialog open={isDialogDeleteSpellOpen} onOpenChange={setIsDialogDeleteSpellOpen}>
                 <AlertDialogContent className={`${poppins.className} w-[600px] max-w-[90vw]`}>
@@ -1012,7 +1247,7 @@ export default function CharacterDetails() {
             <Navbar />
 
             <div className="relative flex items-center h-screen p-4">
-                <div className="flex flex-col ml-24 pb-12">
+                <div className="flex flex-col ml-16 pb-12 w-full max-w-sm">
                     <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">{data.character.name}</h1>
                     <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl relative group'>
                         <div className='bg-tabuleiro/15 p-6 rounded-xl'>
@@ -1274,7 +1509,7 @@ export default function CharacterDetails() {
 
                             {/* Progresso de Dinheiro */}
                             <div className="relative w-full mt-6">
-                                <div className="flex justify-between mb-1">
+                                <div className="flex justify-between">
                                     <p className="font-bold">Dinheiro</p>
                                     <div className="flex items-center space-x-2">
                                         <button onClick={() => subtractCurrentStatus('money')}
@@ -1296,9 +1531,55 @@ export default function CharacterDetails() {
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="relative w-full mt-1">
+                                <div className="flex justify-between">
+                                    <p className="font-bold">Armadura</p>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="number"
+                                            name="armor_class"
+                                            value={Math.round(editedCharStatus.armor_class)}
+                                            onChange={handleInputChangeCharStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="relative w-full mt-1">
+                                <div className="flex justify-between">
+                                    <p className="font-bold">Deslocamento</p>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="number"
+                                            name="movement"
+                                            value={Math.round(editedCharStatus.movement)}
+                                            onChange={handleInputChangeCharStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="relative w-full mt-1">
+                                <div className="flex justify-between">
+                                    <p className="font-bold">Iniciativa</p>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="number"
+                                            name="initiative"
+                                            value={Math.round(editedCharStatus.initiative)}
+                                            onChange={handleInputChangeCharStatus}
+                                            onBlur={() => updateCharacterStatus(editedCharStatus)}
+                                            className="w-10 text-center bg-transparent text-white focus:outline-none focus:border-2 focus:border-tabuleiro/50 rounded-md focus:-mb-1"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="absolute bottom-20 flex space-x-4">
+                    <div className="absolute bottom-8 flex space-x-4">
                         <GiD4 className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(4, 1)} />
                         <GiPerspectiveDiceSix className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(6, 1)} />
                         <GiDiceEightFacesEight className='text-tabuleiro2 text-5xl transition-transform duration-200 hover:scale-110 cursor-pointer' onClick={() => rollDice(8, 1)} />
@@ -1310,7 +1591,7 @@ export default function CharacterDetails() {
 
                 <div className='bg-tabuleiro2/35 p-4 pr-0 border-solid border-tabuleiro border-2 rounded-r-3xl '>
                     {isEditChar ? (
-                        <ScrollArea className='h-[480px] w-[120px] rounded-md pr-4'>
+                        <ScrollArea className='h-[550px] w-[120px] rounded-md pr-4'>
                             <ul className="grid grid-cols-1 gap-3">
                                 {data?.attributes && data.attributes.length > 0 ? (
                                     data.attributes.map((attribute, index) => (
@@ -1379,13 +1660,13 @@ export default function CharacterDetails() {
                                 ) : (
                                     <li>Nenhum atributo disponível</li>
                                 )}
-                                <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-full h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
+                                <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-24 h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                     <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
                                 </div>
                             </ul>
                         </ScrollArea>
                     ) : (
-                        <ScrollArea className='h-[480px] rounded-md pr-4'>
+                        <ScrollArea className='h-[550px] w-[120px] rounded-md pr-4'>
                             <ul className="grid grid-cols-1 gap-3">
                                 {data?.attributes && data.attributes.length > 0 ? (
                                     data.attributes.map((attribute, index) => (
@@ -1413,21 +1694,132 @@ export default function CharacterDetails() {
                                         </div>
                                     </li>
                                 )}
-                                <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-full h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
+                                <div onClick={() => setIsDialogCreateAttributeOpen(true)} className="flex border-dashed border-2 border-tabuleiro2 w-24 h-20 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer">
                                     <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
                                 </div>
                             </ul>
                         </ScrollArea>
                     )}
-
                 </div>
 
-                <div className="flex flex-col p-4 gap-8 pt-28 pl-32">
+                <div className="flex flex-col ml-12">
+                    <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Aptidões</h1>
+                    <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
+                        <div className='bg-tabuleiro/15 p-4 pb-0 rounded-xl'>
+                            <ScrollArea className='h-[655px] w-[120px] rounded-md pr-2'>
+                                <ul className="grid grid-cols-1 gap-3">
+                                    {data?.skills && data.skills.length > 0 ? (
+                                        data.skills.map((skills, index) => (
+                                            <li
+                                                key={index}
+                                                className="relative flex flex-col items-center justify-center w-24 h-24 border-2 border-tabuleiro2 rounded-lg shadow-md bg-tabuleiro/15 mx-auto group"
+                                            >
+                                                {skill_id === skills.id && !isDialogDeleteSkillOpen ? (
+                                                    <div className="flex flex-col items-center justify-center h-full w-full animate-pulse">
+                                                        <FaSpinner className="animate-spin h-7 w-7 text-white" />
+                                                        <p className="text-white mt-2 text-sm">Deletando...</p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className='absolute -top-1 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-150'
+                                                            onClick={() => handleEditSkillClick(skills)}
+                                                        >
+                                                            <TbPencil className="h-4 w-4 text-white" />
+                                                        </div>
+                                                        <div className="absolute top-5 -right-2 z-30 bg-healthBar rounded-full p-1 shadow-md shadow-black/40 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                                                            onClick={() => skills.id && handleDeleteSkillClick(skills.id)}
+                                                        >
+                                                            <FaRegTrashCan className="h-4 w-4 text-white" />
+                                                        </div>
+
+                                                        {editingSkillIndex === skills.id ? (
+                                                            <>
+                                                                <input
+                                                                    type="text"
+                                                                    name="name"
+                                                                    maxLength={15}
+                                                                    value={editedSkill.name}
+                                                                    onChange={handleInputChangeSkill}
+                                                                    className="bg-transparent border-2 border-tabuleiro text-white text-center rounded-md w-full text-sm p-1"
+                                                                />
+                                                                <input
+                                                                    type="number"
+                                                                    name="value"
+                                                                    value={editedSkill.value}
+                                                                    onChange={handleInputChangeSkill}
+                                                                    className="bg-transparent border-2 border-tabuleiro text-white text-center rounded-md w-full "
+                                                                />
+                                                                <select
+                                                                    className='bg-tabuleiro border-2 border-tabuleiro text-white text-center rounded-md w-full text-sm p-1'
+                                                                    value={editedSkill.parent_attribute ?? ''}
+                                                                    onChange={(e) => setEditedSkill((prevSkill) => ({
+                                                                        ...prevSkill,
+                                                                        parent_attribute: e.target.value
+                                                                    }))}
+                                                                >
+                                                                    <option value="" disabled>Selecione um atributo</option>
+                                                                    {data?.attributes?.map((attribute, index) => (
+                                                                        <option key={index} value={attribute.name}>
+                                                                            {attribute.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+
+                                                                <div
+                                                                    className="absolute bottom-0 -right-2 z-30 bg-tabuleiro2 rounded-full p-1 shadow-md shadow-black/40 cursor-pointer"
+                                                                    onClick={() => updateSkill()}
+                                                                >
+                                                                    <FaCheck className="h-4 w-4 text-white" />
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className='absolute top-0 bg-tabuleiro2 w-full max-w-full rounded-t-md text-center overflow-hidden'>
+                                                                    <span className="font-bold text-sm text-white truncate px-2" title={skills.name}>
+                                                                        {skills.name.length > 12 ? `${skills.name.substring(0, 12)}...` : skills.name}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="text-2xl font-bold pt-5">
+                                                                    {skills.value}
+                                                                </span>
+                                                                <span className="text-md font-bold">
+                                                                    {skills.parent_attribute ? skills.parent_attribute.substring(0, 3) : 'N/A'}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <li className='flex items-center justify-center text-center'>Nenhuma aptidão disponível</li>
+                                    )}
+
+                                    {isDialogSkillLoading && (
+                                        <li className="flex flex-col items-center justify-center bg-[#211F46] cursor-pointer border-2 border-tabuleiro rounded-lg h-24 w-24 hover:bg-tabuleiro2/15 animate-pulse mx-auto">
+                                            <div className="text-white font-bold text-md">
+                                                <FaSpinner className="animate-spin h-5 w-5 mx-auto" />
+                                            </div>
+                                        </li>
+                                    )}
+
+                                    <div onClick={() => setIsDialogCreateSkillOpen(true)}
+                                        className="flex border-dashed border-2 border-tabuleiro2 w-24 h-24 justify-center items-center rounded-lg shadow-md bg-none hover:bg-tabuleiro2/30 duration-150 cursor-pointer mx-auto">
+                                        <p className="text-tabuleiro2 text-3xl text-center font-bold">+</p>
+                                    </div>
+                                </ul>
+                            </ScrollArea>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div className="flex flex-col p-4 gap-8 pt-18 max-w-[920px]">
                     <div className="flex flex-col ml-10">
                         <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Ataques & Magias</h1>
                         <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
-                            <div className='bg-tabuleiro/15 p-4 pb-0 rounded-xl'>
-                                <ScrollArea className=" w-[1000px] overflow-x-auto pb-5">
+                            <div className='bg-tabuleiro/15 p-4 pb-0 rounded-xl '>
+                                <ScrollArea className=" w-[800px] overflow-x-auto pb-5">
                                     <ul className="flex gap-6">
                                         {data?.spells && data.spells.length > 0 ? (
                                             data.spells.map((spells, index) => (
@@ -1517,11 +1909,11 @@ export default function CharacterDetails() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col ml-10">
+                    <div className="flex flex-col ml-10 max-w-[920px]">
                         <h1 className="text-tabuleiro2 font-bold text-2xl mb-5">Habilidades</h1>
                         <div className='bg-tabuleiro/5 p-4 border-solid border-tabuleiro border-2 rounded-3xl'>
                             <div className='bg-tabuleiro/15 p-4 pb-0 rounded-xl'>
-                                <ScrollArea className="w-[1000px] overflow-x-auto pb-5">
+                                <ScrollArea className="w-[800px] overflow-x-auto pb-5">
                                     <ul className="flex gap-6">
                                         {data?.abilities && data.abilities.length > 0 ? (
                                             data.abilities.map((ability, index) => (
@@ -1612,7 +2004,6 @@ export default function CharacterDetails() {
                             </div>
                         </div>
                     </div>
-
                 </div>
 
             </div >
